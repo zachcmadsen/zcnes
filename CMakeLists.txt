@@ -5,4 +5,5 @@ project(zcnes)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
+add_subdirectory(external)
 add_subdirectory(src)
