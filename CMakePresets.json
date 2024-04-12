@@ -2,11 +2,11 @@
     "version": 3,
     "configurePresets": [
         {
-            "name": "debug",
+            "name": "clang",
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
-                "CMAKE_C_COMPILER": "gcc",
+                "CMAKE_C_COMPILER": "clang",
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "ZCNES_C_FLAGS": "-Wall -Wextra"
