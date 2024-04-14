@@ -2,14 +2,20 @@
     "version": 3,
     "configurePresets": [
         {
-            "name": "clang",
+            "name": "gcc-clang",
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
-                "CMAKE_C_COMPILER": "clang",
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "ZCNES_C_FLAGS": "-Wall -Wextra"
+            }
+        },
+        {
+            "name": "msvc",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "ZCNES_C_FLAGS": "/W4"
             }
         }
     ]
