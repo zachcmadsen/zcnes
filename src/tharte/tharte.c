@@ -280,7 +280,7 @@ int tharte_run(const char *filename) {
     struct cpu *cpu = malloc(sizeof(struct cpu));
 
     for (struct json_array_element_s *jae = ja->start; jae; jae = jae->next) {
-        const char *name;
+        const char *name = NULL;
         struct cpu_state init, final;
         if (parse_test(jae->value, &name, &init, &final)) {
             rc = -1;
