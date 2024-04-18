@@ -82,6 +82,10 @@ error:
     goto cleanup;
 }
 
+/// Parses `jv` into an unsigned 64-bit integer `n`.
+///
+/// This is a helper function for more specific parse functions, e.g.,
+/// `parse_uint8_t`.
 static int parse_number(struct json_value_s *jv, uint64_t *n) {
     struct json_number_s *jn = json_value_as_number(jv);
     if (!jn) {
@@ -100,6 +104,7 @@ static int parse_number(struct json_value_s *jv, uint64_t *n) {
     return 0;
 }
 
+/// Parses `jv` into an unsigned 8-bit integer `n`.
 static int parse_uint8_t(struct json_value_s *jv, uint8_t *u) {
     uint64_t n;
     if (parse_number(jv, &n)) {
@@ -115,6 +120,7 @@ static int parse_uint8_t(struct json_value_s *jv, uint8_t *u) {
     return 0;
 }
 
+/// Parses `jv` into an unsigned 16-bit integer `n`.
 static int parse_uint16_t(struct json_value_s *jv, uint16_t *u) {
     uint64_t n;
     if (parse_number(jv, &n)) {
@@ -130,6 +136,28 @@ static int parse_uint16_t(struct json_value_s *jv, uint16_t *u) {
     return 0;
 }
 
+int parse_ram_state(struct json_value_s *jv, struct ram_state *state) {
+    struct json_array_s *ja = json_value_as_array(jv);
+    if (!ja) {
+        return -1;
+    }
+
+    if (ja->length != 2) {
+        return -1;
+    }
+
+    struct json_array_element_s *jae = ja->start;
+    if (parse_uint16_t(jae->value, &state->addr)) {
+        return -1;
+    }
+
+    if (parse_uint8_t(jae->next->value, &state->data)) {
+        return -1;
+    }
+
+    return 0;
+}
+
 int parse_ram(const struct json_object_element_s *joe,
               struct cpu_state *state) {
     struct json_array_s *ja = json_value_as_array(joe->value);
@@ -138,36 +166,13 @@ int parse_ram(const struct json_object_element_s *joe,
     }
 
     int i = 0;
-    uint16_t addr;
-    uint8_t data;
-    for (struct json_array_element_s *jae = ja->start; jae; jae = jae->next) {
-        struct json_array_s *ram_state_ja = json_value_as_array(jae->value);
-        if (!ram_state_ja) {
+    for (struct json_array_element_s *jae = ja->start; jae;
+         jae = jae->next, ++i) {
+        if (parse_ram_state(jae->value, &state->ram[i])) {
             return -1;
         }
-
-        if (ram_state_ja->length != 2) {
-            return -1;
-        }
-
-        struct json_array_element_s *addr_jae = ram_state_ja->start;
-        if (parse_uint16_t(addr_jae->value, &addr)) {
-            return -1;
-        }
-
-        printf("addr: %d\n", addr);
-
-        struct json_array_element_s *data_jae = addr_jae->next;
-        if (parse_uint8_t(data_jae->value, &data)) {
-            return -1;
-        }
-
-        printf("data: %d\n", data);
-
-        state->ram[i].addr = addr;
-        state->ram[i].data = data;
-        ++i;
     }
+    state->ram_size = i;
 
     return 0;
 }
@@ -270,8 +275,8 @@ int tharte_run(const char *filename) {
             goto cleanup;
         }
 
-        printf("pc: %d, s: %d, a: %d, x: %d, y: %d, p: %d\n", init.pc, init.s,
-               init.a, init.x, init.y, init.p);
+        printf("pc: %d, s: %d, a: %d, x: %d, y: %d, p: %d\nram len: %zu\n\n",
+               init.pc, init.s, init.a, init.x, init.y, init.p, init.ram_size);
     }
 
 cleanup:
