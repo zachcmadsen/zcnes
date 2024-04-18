@@ -2,9 +2,11 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "json.h"
 
+#include "cpu.h"
 #include "log.h"
 #include "tharte.h"
 
@@ -220,21 +222,28 @@ static int parse_cpu_state(struct json_value_s *jv, struct cpu_state *state) {
     return 0;
 }
 
-static int parse_test(struct json_value_s *jv, struct cpu_state *init,
-                      struct cpu_state *final) {
+static int parse_test(struct json_value_s *jv, const char **name,
+                      struct cpu_state *init, struct cpu_state *final) {
     struct json_object_s *jo = json_value_as_object(jv);
     if (!jo) {
         return -1;
     }
 
     for (struct json_object_element_s *joe = jo->start; joe; joe = joe->next) {
-        const char *name = joe->name->string;
+        const char *joe_name = joe->name->string;
 
-        if (strcmp(name, "initial") == 0) {
+        if (strcmp(joe_name, "name") == 0) {
+            struct json_string_s *js = json_value_as_string(joe->value);
+            if (!js) {
+                return -1;
+            }
+
+            *name = js->string;
+        } else if (strcmp(joe_name, "initial") == 0) {
             if (parse_cpu_state(joe->value, init)) {
                 return -1;
             }
-        } else if (strcmp(name, "final") == 0) {
+        } else if (strcmp(joe_name, "final") == 0) {
             if (parse_cpu_state(joe->value, final)) {
                 return -1;
             }
@@ -268,15 +277,45 @@ int tharte_run(const char *filename) {
         goto cleanup;
     }
 
+    struct cpu *cpu = malloc(sizeof(struct cpu));
+
     for (struct json_array_element_s *jae = ja->start; jae; jae = jae->next) {
+        const char *name;
         struct cpu_state init, final;
-        if (parse_test(jae->value, &init, &final)) {
+        if (parse_test(jae->value, &name, &init, &final)) {
             rc = -1;
             goto cleanup;
         }
 
-        printf("pc: %d, s: %d, a: %d, x: %d, y: %d, p: %d\nram len: %zu\n\n",
-               init.pc, init.s, init.a, init.x, init.y, init.p, init.ram_size);
+        memset(cpu->ram, 0, 0x10000);
+
+        cpu->pc = init.pc;
+        cpu->s = init.s;
+        cpu->a = init.a;
+        cpu->x = init.x;
+        cpu->y = init.y;
+        for (size_t i = 0; i < init.ram_size; ++i) {
+            struct ram_state ram_state = init.ram[i];
+            cpu->ram[ram_state.addr] = ram_state.data;
+        }
+
+        cpu_step(cpu);
+
+        bool passed = true;
+        passed &= cpu->pc == final.pc;
+        passed &= cpu->s == final.s;
+        passed &= cpu->a == final.a;
+        passed &= cpu->x == final.x;
+        passed &= cpu->y == final.y;
+        for (size_t i = 0; i < init.ram_size; ++i) {
+            struct ram_state ram_state = final.ram[i];
+            passed &= cpu->ram[ram_state.addr] == ram_state.data;
+        }
+
+        if (!passed) {
+            printf("name: %s\n", name);
+            // TODO: Print out mismatched values.
+        }
     }
 
 cleanup:
