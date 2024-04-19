@@ -8,7 +8,6 @@
 
 #include "cpu.h"
 #include "log.h"
-#include "tharte.h"
 
 struct ram_state {
     uint16_t addr;
@@ -22,8 +21,8 @@ struct cpu_state {
     size_t ram_size;
 };
 
-/// Reads bytes from file `filename` into `buf`, writing the number of bytes
-/// read to `size`.
+/// Reads the contents of file `filename` into `buf` and stores the size of
+/// `buf` in `size`.
 static int read_file(const char *filename, uint8_t **buf, size_t *size) {
     int rc = 0;
     uint8_t *file_buf = NULL;
@@ -54,7 +53,6 @@ static int read_file(const char *filename, uint8_t **buf, size_t *size) {
         goto error;
     }
 
-    // TODO: How to test malloc failing?
     file_buf = malloc(file_size);
     if (!file_buf) {
         rc = -1;
@@ -106,7 +104,7 @@ static int parse_number(struct json_value_s *jv, uint64_t *n) {
     return 0;
 }
 
-/// Parses `jv` into an unsigned 8-bit integer `n`.
+/// Parses `jv` into an unsigned 8-bit integer `u`.
 static int parse_uint8_t(struct json_value_s *jv, uint8_t *u) {
     uint64_t n;
     if (parse_number(jv, &n)) {
@@ -122,7 +120,7 @@ static int parse_uint8_t(struct json_value_s *jv, uint8_t *u) {
     return 0;
 }
 
-/// Parses `jv` into an unsigned 16-bit integer `n`.
+/// Parses `jv` into an unsigned 16-bit integer `u`.
 static int parse_uint16_t(struct json_value_s *jv, uint16_t *u) {
     uint64_t n;
     if (parse_number(jv, &n)) {
@@ -138,7 +136,8 @@ static int parse_uint16_t(struct json_value_s *jv, uint16_t *u) {
     return 0;
 }
 
-int parse_ram_state(struct json_value_s *jv, struct ram_state *state) {
+/// Parses 'jv' into a  RAM state `state`.
+static int parse_ram_state(struct json_value_s *jv, struct ram_state *state) {
     struct json_array_s *ja = json_value_as_array(jv);
     if (!ja) {
         return -1;
@@ -160,8 +159,9 @@ int parse_ram_state(struct json_value_s *jv, struct ram_state *state) {
     return 0;
 }
 
-int parse_ram(const struct json_object_element_s *joe,
-              struct cpu_state *state) {
+/// Parses `jv` into a `ram_state` array.
+static int parse_ram(const struct json_object_element_s *joe,
+                     struct cpu_state *state) {
     struct json_array_s *ja = json_value_as_array(joe->value);
     if (!ja) {
         return -1;
@@ -179,6 +179,7 @@ int parse_ram(const struct json_object_element_s *joe,
     return 0;
 }
 
+/// Parses `jv` into a CPU `state`.
 static int parse_cpu_state(struct json_value_s *jv, struct cpu_state *state) {
     struct json_object_s *jo = json_value_as_object(jv);
     if (!jo) {
@@ -222,6 +223,8 @@ static int parse_cpu_state(struct json_value_s *jv, struct cpu_state *state) {
     return 0;
 }
 
+/// Parses `jv` into a test, that is, a name, an initial CPU state, and a
+/// final CPU state.
 static int parse_test(struct json_value_s *jv, const char **name,
                       struct cpu_state *init, struct cpu_state *final) {
     struct json_object_s *jo = json_value_as_object(jv);
@@ -253,9 +256,10 @@ static int parse_test(struct json_value_s *jv, const char **name,
     return 0;
 }
 
-int tharte_run(const char *filename) {
+int run(const char *filename) {
     int rc = 0;
     struct json_value_s *jv = NULL;
+    struct cpu *cpu = NULL;
 
     uint8_t *buf = NULL;
     size_t size = 0;
@@ -277,7 +281,7 @@ int tharte_run(const char *filename) {
         goto cleanup;
     }
 
-    struct cpu *cpu = malloc(sizeof(struct cpu));
+    cpu = malloc(sizeof(struct cpu));
 
     for (struct json_array_element_s *jae = ja->start; jae; jae = jae->next) {
         const char *name = NULL;
@@ -313,15 +317,36 @@ int tharte_run(const char *filename) {
         }
 
         if (!passed) {
+            rc = -1;
+
             printf("name: %s\n", name);
             // TODO: Print out mismatched values.
         }
     }
 
 cleanup:
+    if (cpu) {
+        free(cpu);
+    }
+
     if (jv) {
         free(jv);
     }
 
     return rc;
+}
+
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        zc_log(zc_log_error, "no input file\n");
+        return EXIT_FAILURE;
+    }
+
+    char *filename = argv[1];
+
+    if (run(filename)) {
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
 }

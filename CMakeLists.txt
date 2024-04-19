@@ -7,3 +7,6 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 add_subdirectory(ext)
 add_subdirectory(src)
+
+enable_testing()
+add_subdirectory(tests)
