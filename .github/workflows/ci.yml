@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install Ninja
+        run: sudo apt install ninja-build
+
+      - name: Configure
+        run: cmake --preset gcc
+
+      - name: Build
+        run: cmake --build build
