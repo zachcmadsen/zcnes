@@ -6,8 +6,8 @@
 
 #include "json.h"
 
-#include "cpu.h"
 #include "log.h"
+#include "nes.h"
 
 struct ram_state {
     uint16_t addr;
@@ -258,10 +258,10 @@ static int parse_test(struct json_value_s *jv, const char **name,
 
 int run(const char *filename) {
     int rc = 0;
-    struct json_value_s *jv = NULL;
-    struct cpu *cpu = NULL;
-
     uint8_t *buf = NULL;
+    struct json_value_s *jv = NULL;
+    struct zc_nes *nes = NULL;
+
     size_t size = 0;
     if (read_file(filename, &buf, &size)) {
         rc = -1;
@@ -281,7 +281,7 @@ int run(const char *filename) {
         goto cleanup;
     }
 
-    cpu = malloc(sizeof(struct cpu));
+    nes = malloc(sizeof(struct zc_nes));
 
     for (struct json_array_element_s *jae = ja->start; jae; jae = jae->next) {
         const char *name = NULL;
@@ -291,29 +291,29 @@ int run(const char *filename) {
             goto cleanup;
         }
 
-        memset(cpu->ram, 0, 0x10000);
+        memset(nes->cpu.ram, 0, 0x10000);
 
-        cpu->pc = init.pc;
-        cpu->s = init.s;
-        cpu->a = init.a;
-        cpu->x = init.x;
-        cpu->y = init.y;
+        nes->cpu.pc = init.pc;
+        nes->cpu.s = init.s;
+        nes->cpu.a = init.a;
+        nes->cpu.x = init.x;
+        nes->cpu.y = init.y;
         for (size_t i = 0; i < init.ram_size; ++i) {
             struct ram_state ram_state = init.ram[i];
-            cpu->ram[ram_state.addr] = ram_state.data;
+            nes->cpu.ram[ram_state.addr] = ram_state.data;
         }
 
-        cpu_step(cpu);
+        cpu_step(nes);
 
         bool passed = true;
-        passed &= cpu->pc == final.pc;
-        passed &= cpu->s == final.s;
-        passed &= cpu->a == final.a;
-        passed &= cpu->x == final.x;
-        passed &= cpu->y == final.y;
+        passed &= nes->cpu.pc == final.pc;
+        passed &= nes->cpu.s == final.s;
+        passed &= nes->cpu.a == final.a;
+        passed &= nes->cpu.x == final.x;
+        passed &= nes->cpu.y == final.y;
         for (size_t i = 0; i < init.ram_size; ++i) {
             struct ram_state ram_state = final.ram[i];
-            passed &= cpu->ram[ram_state.addr] == ram_state.data;
+            passed &= nes->cpu.ram[ram_state.addr] == ram_state.data;
         }
 
         if (!passed) {
@@ -325,8 +325,8 @@ int run(const char *filename) {
     }
 
 cleanup:
-    if (cpu) {
-        free(cpu);
+    if (nes) {
+        free(nes);
     }
 
     if (jv) {
