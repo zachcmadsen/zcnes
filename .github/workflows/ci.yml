@@ -30,3 +30,17 @@ jobs:
 
       - name: Test
         run: ctest -j 2 --test-dir build
+  
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Configure
+        run: cmake --preset msvc
+
+      - name: Build
+        run: cmake --build build --config Debug
