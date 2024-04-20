@@ -333,6 +333,10 @@ cleanup:
         free(jv);
     }
 
+    if (buf) {
+        free(buf);
+    }
+
     return rc;
 }
 
