@@ -9,8 +9,8 @@
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_C_COMPILER": "gcc",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "ZCNES_C_FLAGS": "-Wall -Wextra -fsanitize=address -fsanitize=undefined",
-                "ZCNES_LD_FLAGS": "-fsanitize=address -fsanitize=undefined"
+                "ZCNES_C_FLAGS": "-Wall -Wextra -fsanitize=address -fsanitize=undefined --coverage",
+                "ZCNES_LD_FLAGS": "-fsanitize=address -fsanitize=undefined --coverage"
             }
         },
         {
