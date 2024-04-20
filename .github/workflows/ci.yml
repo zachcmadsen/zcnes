@@ -39,11 +39,8 @@ jobs:
         with:
           submodules: true
 
-      - name: Install Ninja
-        run: choco install ninja
-
       - name: Configure
         run: cmake --preset msvc
 
       - name: Build
-        run: cmake --build build
+        run: cmake --build build --config Debug

@@ -15,10 +15,8 @@
         },
         {
             "name": "msvc",
-            "generator": "Ninja",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug",
                 "ZCNES_C_FLAGS": "/W4"
             }
         }
