@@ -17,6 +17,7 @@
             "name": "msvc",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
+                "CMAKE_CONFIGURATION_TYPES": "Debug",
                 "ZCNES_C_FLAGS": "/W4"
             }
         }
