@@ -2,8 +2,14 @@
 
 #include "nes.h"
 
+#if defined(__has_builtin)
+#if __has_builtin(__builtin_add_overflow)
+#define ZCNES_BUILTINS 1
+#endif
+#endif
+
 static bool overflowing_add(uint8_t a, uint8_t b, uint8_t *out) {
-#if defined(__has_builtin) && __has_builtin(__builtin_add_overflow)
+#ifdef ZCNES_BUILTINS
     return __builtin_add_overflow(a, b, out);
 #else
     *out = a + b;
