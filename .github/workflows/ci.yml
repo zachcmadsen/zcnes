@@ -29,4 +29,4 @@ jobs:
         run: git clone https://github.com/zachcmadsen/zcnes-tests.git ../zcnes-tests 
 
       - name: Test
-        run: cmake --test-dir build
+        run: ctest --test-dir build
