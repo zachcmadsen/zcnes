@@ -18,7 +18,15 @@ jobs:
         run: sudo apt install ninja-build
 
       - name: Configure
-        run: cmake --preset gcc
+        run: cmake --preset dev
 
       - name: Build
         run: cmake --build build
+
+      # TODO: Consider making zcnes-tests a submodule. I went with a separate
+      # repo for now since it's less coupled.
+      - name: Clone zcnes-tests
+        run: git clone https://github.com/zachcmadsen/zcnes-tests.git ../zcnes-tests 
+
+      - name: Test
+        run: cmake --test-dir build
