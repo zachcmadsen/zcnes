@@ -2,6 +2,15 @@
 
 #include "nes.h"
 
+static bool overflowing_add(uint8_t a, uint8_t b, uint8_t *out) {
+#if defined(__has_builtin) && __has_builtin(__builtin_add_overflow)
+    return __builtin_add_overflow(a, b, result);
+#else
+    *out = a + b;
+    return *out < a;
+#endif
+}
+
 static uint8_t read_byte(struct zc_nes *nes, uint16_t addr) {
     return nes->cpu.ram[addr];
 }
@@ -20,7 +29,7 @@ static void abu(struct zc_nes *nes) {
 
 static void abx_r(struct zc_nes *nes) {
     uint8_t low = read_next_byte(nes);
-    bool page_cross = __builtin_add_overflow(low, nes->cpu.x, &low);
+    bool page_cross = overflowing_add(low, nes->cpu.x, &low);
     uint8_t high = read_next_byte(nes);
     if (page_cross) {
         read_byte(nes, low | high << 8);
@@ -30,7 +39,7 @@ static void abx_r(struct zc_nes *nes) {
 
 static void aby_r(struct zc_nes *nes) {
     uint8_t low = read_next_byte(nes);
-    bool page_cross = __builtin_add_overflow(low, nes->cpu.y, &low);
+    bool page_cross = overflowing_add(low, nes->cpu.y, &low);
     uint8_t high = read_next_byte(nes);
     if (page_cross) {
         read_byte(nes, low | high << 8);
