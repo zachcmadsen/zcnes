@@ -15,22 +15,22 @@ static uint8_t read_byte(struct zc_nes *nes, uint16_t addr) {
     return nes->cpu.ram[addr];
 }
 
-static uint8_t read_next_byte(struct zc_nes *nes) {
+static uint8_t eat_byte(struct zc_nes *nes) {
     uint8_t data = read_byte(nes, nes->cpu.pc);
     ++nes->cpu.pc;
     return data;
 }
 
 static void abu(struct zc_nes *nes) {
-    uint8_t low = read_next_byte(nes);
-    uint8_t high = read_next_byte(nes);
+    uint8_t low = eat_byte(nes);
+    uint8_t high = eat_byte(nes);
     nes->cpu.ea = low | high << 8;
 }
 
 static void abx_r(struct zc_nes *nes) {
-    uint8_t low = read_next_byte(nes);
+    uint8_t low = eat_byte(nes);
     bool page_cross = overflowing_add(low, nes->cpu.x, &low);
-    uint8_t high = read_next_byte(nes);
+    uint8_t high = eat_byte(nes);
     if (page_cross) {
         read_byte(nes, low | high << 8);
     }
@@ -38,9 +38,9 @@ static void abx_r(struct zc_nes *nes) {
 }
 
 static void aby_r(struct zc_nes *nes) {
-    uint8_t low = read_next_byte(nes);
+    uint8_t low = eat_byte(nes);
     bool page_cross = overflowing_add(low, nes->cpu.y, &low);
-    uint8_t high = read_next_byte(nes);
+    uint8_t high = eat_byte(nes);
     if (page_cross) {
         read_byte(nes, low | high << 8);
     }
@@ -48,7 +48,7 @@ static void aby_r(struct zc_nes *nes) {
 }
 
 static void idx(struct zc_nes *nes) {
-    uint8_t ptr = read_next_byte(nes);
+    uint8_t ptr = eat_byte(nes);
     read_byte(nes, ptr);
     ptr += nes->cpu.x;
     uint8_t low = read_byte(nes, ptr);
@@ -62,25 +62,25 @@ static void imm(struct zc_nes *nes) {
 }
 
 static void ind(struct zc_nes *nes) {
-    uint8_t ptr_low = read_next_byte(nes);
-    uint8_t ptr_high = read_next_byte(nes);
+    uint8_t ptr_low = eat_byte(nes);
+    uint8_t ptr_high = eat_byte(nes);
     uint8_t low = read_byte(nes, ptr_low | ptr_high << 8);
     uint8_t high = read_byte(nes, (uint8_t)(ptr_low + 1) | ptr_high << 8);
     nes->cpu.ea = low | high << 8;
 }
 
 static void zpg(struct zc_nes *nes) {
-    nes->cpu.ea = read_next_byte(nes);
+    nes->cpu.ea = eat_byte(nes);
 }
 
 static void zpx(struct zc_nes *nes) {
-    uint8_t low = read_next_byte(nes);
+    uint8_t low = eat_byte(nes);
     read_byte(nes, low);
     nes->cpu.ea = (uint8_t)(low + nes->cpu.x);
 }
 
 static void zpy(struct zc_nes *nes) {
-    uint8_t low = read_next_byte(nes);
+    uint8_t low = eat_byte(nes);
     read_byte(nes, low);
     nes->cpu.ea = (uint8_t)(low + nes->cpu.y);
 }
@@ -102,7 +102,7 @@ static void jmp(struct zc_nes *nes) {
 }
 
 void cpu_step(struct zc_nes *nes) {
-    uint8_t opc = read_next_byte(nes);
+    uint8_t opc = eat_byte(nes);
     if (opc == 0x6C) {
         ind(nes);
         jmp(nes);
