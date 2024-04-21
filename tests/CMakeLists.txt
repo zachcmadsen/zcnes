@@ -2,6 +2,7 @@ add_executable(tharte tharte.c)
 target_link_libraries(tharte PRIVATE common core jsonh)
 zcnes_options(tharte)
 
+add_test(NAME ProcessorTests.01 COMMAND tharte ${CMAKE_SOURCE_DIR}/../zcnes-tests/ProcessorTests/01.json)
 add_test(NAME ProcessorTests.6C COMMAND tharte ${CMAKE_SOURCE_DIR}/../zcnes-tests/ProcessorTests/6c.json)
 add_test(NAME ProcessorTests.A1 COMMAND tharte ${CMAKE_SOURCE_DIR}/../zcnes-tests/ProcessorTests/a1.json)
 add_test(NAME ProcessorTests.A5 COMMAND tharte ${CMAKE_SOURCE_DIR}/../zcnes-tests/ProcessorTests/a5.json)

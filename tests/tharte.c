@@ -238,6 +238,7 @@ int run(const char *filename) {
         nes->cpu.a = init.a;
         nes->cpu.x = init.x;
         nes->cpu.y = init.y;
+        cpu_set_p(nes, init.p);
         for (size_t i = 0; i < init.ram_size; ++i) {
             struct ram_state ram_state = init.ram[i];
             nes->cpu.ram[ram_state.addr] = ram_state.data;
@@ -251,6 +252,7 @@ int run(const char *filename) {
         passed &= nes->cpu.a == final.a;
         passed &= nes->cpu.x == final.x;
         passed &= nes->cpu.y == final.y;
+        passed &= cpu_get_p(nes) == final.p;
         for (size_t i = 0; i < init.ram_size; ++i) {
             struct ram_state ram_state = final.ram[i];
             passed &= nes->cpu.ram[ram_state.addr] == ram_state.data;
@@ -260,7 +262,25 @@ int run(const char *filename) {
             rc = -1;
 
             printf("name: %s\n", name);
-            // TODO: Print out mismatched values.
+            if (nes->cpu.pc != final.pc) {
+                printf("pc: 0x%hx != 0x%hx\n", nes->cpu.pc, final.pc);
+            }
+            if (nes->cpu.s != final.s) {
+                printf("s: 0x%hx != 0x%hx\n", nes->cpu.s, final.s);
+            }
+            if (nes->cpu.a != final.a) {
+                printf("a: 0x%hx != 0x%hx\n", nes->cpu.a, final.a);
+            }
+            if (nes->cpu.x != final.x) {
+                printf("x: 0x%hx != 0x%hx\n", nes->cpu.x, final.x);
+            }
+            if (nes->cpu.y != final.y) {
+                printf("y: 0x%hx != 0x%hx\n", nes->cpu.y, final.y);
+            }
+            if (cpu_get_p(nes) != final.p) {
+                printf("p: 0x%hhx != 0x%hhx\n", cpu_get_p(nes), final.p);
+            }
+            printf("\n");
         }
     }
 

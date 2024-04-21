@@ -8,6 +8,7 @@ struct zc_cpu {
     uint8_t a, x, y, s;
     bool c, z, i, d, v, n;
 
+    bool pg_cross;
     uint16_t ea;
 
     uint8_t ram[0x10000];
@@ -16,6 +17,9 @@ struct zc_cpu {
 struct zc_nes {
     struct zc_cpu cpu;
 };
+
+uint8_t cpu_get_p(struct zc_nes *nes);
+void cpu_set_p(struct zc_nes *nes, uint8_t p);
 
 // TODO: Only expose this for tests?
 void cpu_step(struct zc_nes *nes);
