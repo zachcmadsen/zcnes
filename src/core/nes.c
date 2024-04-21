@@ -120,7 +120,8 @@ static void imm(struct zc_nes *nes) {
     ++nes->cpu.pc;
 }
 
-static void imp([[maybe_unused]] struct zc_nes *nes) {
+static void imp(struct zc_nes *nes) {
+    (void)nes;
 }
 
 static void ind(struct zc_nes *nes) {
@@ -150,7 +151,7 @@ static void zpy(struct zc_nes *nes) {
 static void add(struct zc_nes *nes, uint8_t data) {
     uint8_t prev_a = nes->cpu.a;
     uint16_t sum = nes->cpu.a + data + nes->cpu.c;
-    nes->cpu.a = sum;
+    nes->cpu.a = (uint8_t)sum;
     nes->cpu.c = sum > 0xFF;
     nes->cpu.v = (prev_a ^ nes->cpu.a) & (data ^ nes->cpu.a) & 0x80;
     nes->cpu.z = nes->cpu.a == 0;
@@ -196,7 +197,7 @@ static void push(struct zc_nes *nes, uint8_t data) {
 // https://github.com/TomHarte/ProcessorTests/issues/61
 static void sh(struct zc_nes *nes, uint8_t data) {
     // TODO: Rewrite this as an if-else?
-    uint8_t low = nes->cpu.ea;
+    uint8_t low = (uint8_t)nes->cpu.ea;
     uint8_t high = nes->cpu.ea >> 8;
     data = data & (high + !nes->cpu.pg_cross);
     high = nes->cpu.pg_cross ? data : high;
@@ -231,7 +232,8 @@ static void and(struct zc_nes * nes) {
 }
 // clang-format on
 
-static void ane([[maybe_unused]] struct zc_nes *nes) {
+static void ane(struct zc_nes *nes) {
+    (void)nes;
 }
 
 static void arr(struct zc_nes *nes) {
@@ -295,7 +297,7 @@ static void bpl(struct zc_nes *nes) {
 static void brk(struct zc_nes *nes) {
     eat_byte(nes);
     push(nes, nes->cpu.pc >> 8);
-    push(nes, nes->cpu.pc);
+    push(nes, (uint8_t)nes->cpu.pc);
     // Set the B flag before pushing p onto the stack.
     uint8_t p = cpu_get_p(nes) | 1 << 4;
     push(nes, p);
@@ -416,7 +418,8 @@ static void isc(struct zc_nes *nes) {
     add(nes, data ^ 0xFF);
 }
 
-static void jam([[maybe_unused]] struct zc_nes *nes) {
+static void jam(struct zc_nes *nes) {
+    (void)nes;
 }
 
 static void jmp(struct zc_nes *nes) {
@@ -427,7 +430,7 @@ static void jsr(struct zc_nes *nes) {
     uint8_t pcl = eat_byte(nes);
     peek(nes);
     push(nes, nes->cpu.pc >> 8);
-    push(nes, nes->cpu.pc);
+    push(nes, (uint8_t)nes->cpu.pc);
     uint8_t pch = eat_byte(nes);
     nes->cpu.pc = pcl | pch << 8;
 }
@@ -483,7 +486,8 @@ static void lsr_a(struct zc_nes *nes) {
     nes->cpu.n = nes->cpu.a & 0x80;
 }
 
-static void lxa([[maybe_unused]] struct zc_nes *nes) {
+static void lxa(struct zc_nes *nes) {
+    (void)nes;
 }
 
 static void nop(struct zc_nes *nes) {
