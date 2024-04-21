@@ -239,7 +239,7 @@ static void arr(struct zc_nes *nes) {
     nes->cpu.a = nes->cpu.a >> 1 | nes->cpu.c << 7;
     nes->cpu.c = nes->cpu.a & 0x40;
     nes->cpu.z = nes->cpu.a == 0;
-    nes->cpu.v = nes->cpu.c ^ (nes->cpu.a & 0x20);
+    nes->cpu.v = nes->cpu.c ^ (nes->cpu.a & 0x20) >> 5;
     nes->cpu.n = nes->cpu.a & 0x80;
 }
 
@@ -518,8 +518,9 @@ static void pla(struct zc_nes *nes) {
 static void plp(struct zc_nes *nes) {
     read_byte(nes, nes->cpu.pc);
     peek(nes);
-    uint8_t p = pop(nes);
-    cpu_set_p(nes, p);
+    bool prev_b = nes->cpu.b;
+    cpu_set_p(nes, pop(nes));
+    nes->cpu.b = prev_b;
 }
 
 static void rla(struct zc_nes *nes) {
@@ -587,7 +588,9 @@ static void rra(struct zc_nes *nes) {
 static void rti(struct zc_nes *nes) {
     read_byte(nes, nes->cpu.pc);
     peek(nes);
+    bool prev_b = nes->cpu.b;
     cpu_set_p(nes, pop(nes));
+    nes->cpu.b = prev_b;
     uint8_t pcl = pop(nes);
     uint8_t pch = pop(nes);
     nes->cpu.pc = pcl | pch << 8;
@@ -653,8 +656,8 @@ static void slo(struct zc_nes *nes) {
     data <<= 1;
     write_byte(nes, nes->cpu.ea, data);
     nes->cpu.a |= data;
-    nes->cpu.z = data == 0;
-    nes->cpu.n = data & 0x80;
+    nes->cpu.z = nes->cpu.a == 0;
+    nes->cpu.n = nes->cpu.a & 0x80;
 }
 
 static void sre(struct zc_nes *nes) {
@@ -664,8 +667,8 @@ static void sre(struct zc_nes *nes) {
     data >>= 1;
     write_byte(nes, nes->cpu.ea, data);
     nes->cpu.a ^= data;
-    nes->cpu.z = data == 0;
-    nes->cpu.n = data & 0x80;
+    nes->cpu.z = nes->cpu.a == 0;
+    nes->cpu.n = nes->cpu.a & 0x80;
 }
 
 static void sta(struct zc_nes *nes) {
@@ -728,7 +731,8 @@ static void tya(struct zc_nes *nes) {
 uint8_t cpu_get_p(struct zc_nes *nes) {
     // Bit 5 is always 1.
     return nes->cpu.c | (nes->cpu.z << 1) | (nes->cpu.i << 2) |
-           (nes->cpu.d << 3) | (1 << 5) | (nes->cpu.v << 6) | (nes->cpu.n << 7);
+           (nes->cpu.d << 3) | (nes->cpu.b << 4) | (1 << 5) |
+           (nes->cpu.v << 6) | (nes->cpu.n << 7);
 }
 
 void cpu_set_p(struct zc_nes *nes, uint8_t p) {
@@ -736,6 +740,7 @@ void cpu_set_p(struct zc_nes *nes, uint8_t p) {
     nes->cpu.z = p & 0x02;
     nes->cpu.i = p & 0x04;
     nes->cpu.d = p & 0x08;
+    nes->cpu.b = p & 0x10;
     nes->cpu.v = p & 0x40;
     nes->cpu.n = p & 0x80;
 }

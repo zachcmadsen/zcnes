@@ -6,7 +6,7 @@
 struct zc_cpu {
     uint16_t pc;
     uint8_t a, x, y, s;
-    bool c, z, i, d, v, n;
+    bool c, z, i, d, b, v, n;
 
     bool pg_cross;
     uint16_t ea;
