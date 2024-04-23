@@ -31,7 +31,13 @@ static bool overflowing_sub(uint8_t a, uint8_t b, uint8_t *res) {
 }
 
 static uint8_t read_byte(struct zc_nes *nes, uint16_t addr) {
+#ifdef ZCNES_PROCESSOR_TESTS
     return nes->cpu.ram[addr];
+#else
+    (void)nes;
+    (void)addr;
+    return 0;
+#endif
 }
 
 static uint8_t eat_byte(struct zc_nes *nes) {
@@ -41,7 +47,13 @@ static uint8_t eat_byte(struct zc_nes *nes) {
 }
 
 static void write_byte(struct zc_nes *nes, uint16_t addr, uint8_t data) {
+#ifdef ZCNES_PROCESSOR_TESTS
     nes->cpu.ram[addr] = data;
+#else
+    (void)nes;
+    (void)addr;
+    (void)data;
+#endif
 }
 
 static void abu(struct zc_nes *nes) {

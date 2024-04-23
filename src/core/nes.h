@@ -11,7 +11,9 @@ struct zc_cpu {
     bool pg_cross;
     uint16_t ea;
 
+#ifdef ZCNES_PROCESSOR_TESTS
     uint8_t ram[0x10000];
+#endif
 };
 
 struct zc_nes {
