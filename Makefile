@@ -1,6 +1,8 @@
 .PHONY: default
 default: build
 
+# TODO: Add an error message when cmake/ninja aren't installed. See
+# https://github.com/mattgodbolt/xania/blob/main/Makefile for an example.
 build/build.ninja:
 	cmake --preset dev
 
