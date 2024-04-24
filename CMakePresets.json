@@ -2,21 +2,54 @@
     "version": 3,
     "configurePresets": [
         {
+            "name": "flags-linux",
+            "hidden": true,
+            "cacheVariables": {
+                "ZCNES_C_FLAGS": "-Wall -Wextra"
+            }
+        },
+        {
             "name": "dev",
+            "inherits": [
+                "flags-linux"
+            ],
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_C_COMPILER": "gcc",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "ZCNES_C_FLAGS": "-Wall -Wextra -fsanitize=address -fsanitize=undefined --coverage",
-                "ZCNES_LD_FLAGS": "-fsanitize=address -fsanitize=undefined --coverage"
+                "CMAKE_C_COMPILER": "gcc"
             }
         },
         {
-            "name": "msvc",
+            "name": "ci-linux",
+            "inherits": [
+                "flags-linux"
+            ],
+            "generator": "Unix Makefiles",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_C_COMPILER": "gcc"
+            }
+        },
+        {
+            "name": "ci-sanitize",
+            "inherits": [
+                "ci-linux"
+            ],
+            "binaryDir": "${sourceDir}/build-sanitize",
+            "cacheVariables": {
+                // -fno-sanitize-recover=all disables recovery for sanitizers
+                "ZCNES_C_FLAGS_SANITIZE": "-g -fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all",
+                "ZCNES_LINKER_FLAGS_SANITIZE": "-fsanitize=address -fsanitize=undefined"
+            }
+        },
+        {
+            "name": "ci-msvc",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_CONFIGURATION_TYPES": "Release",
                 "ZCNES_C_FLAGS": "/W4"
             }
         }

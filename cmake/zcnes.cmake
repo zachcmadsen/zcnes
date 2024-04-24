@@ -5,11 +5,19 @@
 function(zcnes_options TARGET)
     if (ZCNES_C_FLAGS)
         separate_arguments(ZCNES_C_FLAGS_LIST NATIVE_COMMAND ${ZCNES_C_FLAGS})
-        target_compile_options(${TARGET} PRIVATE ${ZCNES_C_FLAGS_LIST})
+        list(APPEND ZCNES_COMPILE_OPTIONS ${ZCNES_C_FLAGS_LIST})
     endif()
 
-    if (ZCNES_LD_FLAGS)
-        separate_arguments(ZCNES_LD_FLAGS_LIST NATIVE_COMMAND ${ZCNES_LD_FLAGS})
-        target_link_libraries(${TARGET} PRIVATE ${ZCNES_LD_FLAGS_LIST})
+    if (ZCNES_C_FLAGS_SANITIZE)
+        separate_arguments(ZCNES_C_FLAGS_SANITIZE_LIST NATIVE_COMMAND ${ZCNES_C_FLAGS_SANITIZE})
+        list(APPEND ZCNES_COMPILE_OPTIONS ${ZCNES_C_FLAGS_SANITIZE_LIST})
     endif()
+
+    if (ZCNES_LINKER_FLAGS_SANITIZE)
+        separate_arguments(ZCNES_LINKER_FLAGS_SANITIZE_LIST NATIVE_COMMAND ${ZCNES_LINKER_FLAGS_SANITIZE})
+        list(APPEND ZCNES_LINKER_OPTIONS ${ZCNES_LINKER_FLAGS_SANITIZE_LIST})
+    endif()
+
+    target_compile_options(${TARGET} PRIVATE ${ZCNES_COMPILE_OPTIONS})
+    target_link_libraries(${TARGET} PRIVATE ${ZCNES_LINKER_OPTIONS})
 endfunction()
