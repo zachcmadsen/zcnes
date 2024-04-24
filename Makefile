@@ -3,6 +3,7 @@ default: build
 
 # TODO: Add an error message when cmake/ninja aren't installed. See
 # https://github.com/mattgodbolt/xania/blob/main/Makefile for an example.
+# It could default to Makefiles if ninja isn't installed.
 build/build.ninja:
 	cmake --preset dev
 
@@ -12,7 +13,7 @@ build: build/build.ninja
 
 .PHONY: test
 test: build
-	ctest --test-dir build
+	ctest --test-dir build -j $$(nproc)
 
 .PHONY: clean
 clean:
