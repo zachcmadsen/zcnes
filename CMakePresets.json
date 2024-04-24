@@ -40,7 +40,6 @@
             ],
             "binaryDir": "${sourceDir}/build-sanitize",
             "cacheVariables": {
-                // -fno-sanitize-recover=all disables recovery for sanitizers
                 "ZCNES_C_FLAGS_SANITIZE": "-g -fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all",
                 "ZCNES_LINKER_FLAGS_SANITIZE": "-fsanitize=address -fsanitize=undefined"
             }
@@ -51,6 +50,15 @@
             "cacheVariables": {
                 "CMAKE_CONFIGURATION_TYPES": "Release",
                 "ZCNES_C_FLAGS": "/W4"
+            }
+        },
+        {
+            "name": "coverage",
+            "binaryDir": "${sourceDir}/build-coverage",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "gcc",
+                "ZCNES_C_FLAGS_COVERAGE": "-O0 -g --coverage",
+                "ZCNES_LINKER_FLAGS_COVERAGE": "--coverage"
             }
         }
     ]
