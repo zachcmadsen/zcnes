@@ -1,8 +1,11 @@
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "nes.h"
 
 #define STACK_ADDR 0x0100
+#define RESET_VECTOR 0xFFFC
 #define IRQ_VECTOR 0xFFFE
 
 #if defined(__has_builtin)
@@ -30,12 +33,35 @@ static bool overflowing_sub(uint8_t a, uint8_t b, uint8_t *res) {
 #endif
 }
 
+uint8_t cart_read_prg_ram(struct zc_nes *nes, uint16_t addr) {
+    return nes->cart.prg_ram[addr - 0x6000];
+}
+
+void cart_write_prg_ram(struct zc_nes *nes, uint16_t addr, uint8_t data) {
+    nes->cart.prg_ram[addr - 0x6000] = data;
+}
+
+uint8_t cart_read_prg_rom(struct zc_nes *nes, uint16_t addr) {
+    return nes->cart.prg_rom[(addr - 0x8000) % nes->cart.prg_rom_size];
+}
+
+void cart_write_prg_rom(struct zc_nes *nes, uint16_t addr, uint8_t data) {
+    nes->cart.prg_rom[(addr - 0x8000) % nes->cart.prg_rom_size] = data;
+}
+
 static uint8_t read_byte(struct zc_nes *nes, uint16_t addr) {
 #ifdef ZCNES_PROCESSOR_TESTS
     return nes->cpu.ram[addr];
 #else
-    (void)nes;
-    (void)addr;
+    if (addr <= 0x1FFF) {
+        // 0x0800-0x1FFF are mirrors of 0x0000-0x07FF.
+        return nes->ram[addr & 0x07FF];
+    } else if (addr >= 0x6000 && addr <= 0x7FFF) {
+        return cart_read_prg_ram(nes, addr);
+    } else if (addr >= 0x8000) {
+        return cart_read_prg_rom(nes, addr);
+    }
+
     return 0;
 #endif
 }
@@ -50,9 +76,15 @@ static void write_byte(struct zc_nes *nes, uint16_t addr, uint8_t data) {
 #ifdef ZCNES_PROCESSOR_TESTS
     nes->cpu.ram[addr] = data;
 #else
-    (void)nes;
-    (void)addr;
-    (void)data;
+    if (addr <= 0x1FFF) {
+        // TODO: Move the mirroring logic into a function.
+        // 0x0800-0x1FFF are mirrors of 0x0000-0x07FF.
+        nes->ram[addr & 0x07FF] = data;
+    } else if (addr >= 0x6000 && addr <= 0x7FFF) {
+        cart_write_prg_ram(nes, addr, data);
+    } else if (addr >= 0x8000) {
+        cart_write_prg_rom(nes, addr, data);
+    }
 #endif
 }
 
@@ -498,8 +530,12 @@ static void lsr_a(struct zc_nes *nes) {
     nes->cpu.n = nes->cpu.a & 0x80;
 }
 
+// TODO: Explain this.
 static void lxa(struct zc_nes *nes) {
-    (void)nes;
+    nes->cpu.a = read_byte(nes, nes->cpu.ea);
+    nes->cpu.x = nes->cpu.a;
+    nes->cpu.z = nes->cpu.a == 0;
+    nes->cpu.n = nes->cpu.a & 0x80;
 }
 
 static void nop(struct zc_nes *nes) {
@@ -761,6 +797,20 @@ void cpu_set_p(struct zc_nes *nes, uint8_t p) {
     nes->cpu.n = p & 0x80;
 }
 
+void cpu_reset(struct zc_nes *nes) {
+    read_byte(nes, nes->cpu.pc);
+    peek(nes);
+    --nes->cpu.s;
+    peek(nes);
+    --nes->cpu.s;
+    peek(nes);
+    --nes->cpu.s;
+    nes->cpu.i = true;
+    uint8_t pcl = read_byte(nes, RESET_VECTOR);
+    uint8_t pch = read_byte(nes, RESET_VECTOR + 1);
+    nes->cpu.pc = pcl | pch << 8;
+}
+
 struct opc_info {
     void (*mode)(struct zc_nes *);
     void (*instr)(struct zc_nes *);
@@ -827,6 +877,44 @@ void cpu_step(struct zc_nes *nes) {
     opc_lut[opc].instr(nes);
 }
 
+int nes_init(struct zc_nes *nes, const uint8_t *rom, size_t rom_size) {
+    if (!nes) {
+        return -1;
+    }
+
+    // TODO: Add logging to header/rom parsing.
+    size_t prg_rom_size = rom[4] * 16384;
+    if (rom_size < prg_rom_size) {
+        return -1;
+    }
+
+    uint8_t *prg_rom = malloc(prg_rom_size);
+    if (!prg_rom) {
+        return -1;
+    }
+
+    rom += 16;
+    if (!memcpy(prg_rom, rom, prg_rom_size)) {
+        // TODO: Cleanup prg_rom.
+        return -1;
+    }
+
+    nes->cart.prg_rom = prg_rom;
+    nes->cart.prg_rom_size = prg_rom_size;
+
+    return 0;
+}
+
 void nes_step(struct zc_nes *nes) {
     cpu_step(nes);
+}
+
+void nes_free(struct zc_nes *nes) {
+    if (!nes) {
+        return;
+    }
+
+    if (nes->cart.prg_rom) {
+        free(nes->cart.prg_rom);
+    }
 }
