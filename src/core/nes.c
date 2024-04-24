@@ -899,6 +899,23 @@ int nes_init(struct zc_nes *nes, const uint8_t *rom, size_t rom_size) {
         return -1;
     }
 
+    nes->cpu.pc = 0;
+    nes->cpu.a = 0;
+    nes->cpu.x = 0;
+    nes->cpu.y = 0;
+    nes->cpu.s = 0xFD;
+
+    nes->cpu.c = false;
+    nes->cpu.z = false;
+    nes->cpu.i = true;
+    nes->cpu.d = false;
+    nes->cpu.b = false;
+    nes->cpu.v = false;
+    nes->cpu.n = false;
+
+    nes->cpu.pg_cross = false;
+    nes->cpu.ea = 0;
+
     nes->cart.prg_rom = prg_rom;
     nes->cart.prg_rom_size = prg_rom_size;
 
