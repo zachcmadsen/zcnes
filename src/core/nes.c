@@ -33,6 +33,52 @@ static bool overflowing_sub(uint8_t a, uint8_t b, uint8_t *res) {
 #endif
 }
 
+void ppu_write_ctrl(struct zc_nes *nes, uint8_t data) {
+    // TODO: Inline the bitwise ANDs to take advantage of short circuiting.
+    const bool vblank_flag = nes->ppu.status & 0x80;
+    const bool prev_nmi = nes->ppu.ctrl & 0x80;
+    const bool nmi = data & 0x80;
+    if (nes->ppu.vblank && vblank_flag && !prev_nmi && nmi) {
+        // TODO: Generate an NMI.
+    }
+
+    nes->ppu.ctrl = data;
+    nes->ppu.t = nes->ppu.t & 0xF3FF | (data & 0x03) << 10;
+}
+
+void ppu_write_mask(struct zc_nes *nes, uint8_t data) {
+    nes->ppu.mask = data;
+}
+
+void ppu_write_oamaddr(struct zc_nes *nes, uint8_t data) {
+}
+
+void ppu_write_oamdata(struct zc_nes *nes, uint8_t data) {
+}
+
+void ppu_write_scroll(struct zc_nes *nes, uint8_t data) {
+    if (!nes->ppu.w) {
+        nes->ppu.t = nes->ppu.t & 0xFFE0 | data >> 3;
+        nes->ppu.x = data & 0x07;
+        nes->ppu.w = true;
+    } else {
+        nes->ppu.t = nes->ppu.t & 0x8FFF | (data & 0x07) << 12;
+        nes->ppu.t = nes->ppu.t & 0xFC1F | (data & 0xF8) << 2;
+        nes->ppu.w = false;
+    }
+}
+
+void ppu_write_addr(struct zc_nes *nes, uint8_t data) {
+    if (!nes->ppu.w) {
+        nes->ppu.t = nes->ppu.t & 0x00FF | (data & 0x3F) << 8;
+        nes->ppu.w = true;
+    } else {
+        nes->ppu.t = nes->ppu.t & 0xFF00 | data;
+        nes->ppu.v = nes->ppu.t;
+        nes->ppu.w = false;
+    }
+}
+
 uint8_t cart_read_prg_ram(struct zc_nes *nes, uint16_t addr) {
     return nes->cart.prg_ram[addr - 0x6000];
 }
@@ -80,6 +126,32 @@ static void write_byte(struct zc_nes *nes, uint16_t addr, uint8_t data) {
         // TODO: Move the mirroring logic into a function.
         // 0x0800-0x1FFF are mirrors of 0x0000-0x07FF.
         nes->ram[addr & 0x07FF] = data;
+    } else if (addr >= 0x2000 && addr <= 0x2007) {
+        // TODO: 0x2008-0x3FFF are mirrors of 0x2000-0x2007.
+        switch (addr) {
+        case 0x2000:
+            ppu_write_ctrl(nes, data);
+            break;
+        case 0x2001:
+            ppu_write_mask(nes, data);
+            break;
+        case 0x2003:
+            ppu_write_oamaddr(nes, data);
+            break;
+        case 0x2004:
+            ppu_write_oamdata(nes, data);
+            break;
+        case 0x2005:
+            ppu_write_scroll(nes, data);
+            break;
+        case 0x2006:
+            ppu_write_addr(nes, data);
+            break;
+        case 0x2007:
+            // TODO: Implement PPUDATA writes.
+            break;
+        };
+        nes->ppu.io_bus = data;
     } else if (addr >= 0x6000 && addr <= 0x7FFF) {
         cart_write_prg_ram(nes, addr, data);
     } else if (addr >= 0x8000) {

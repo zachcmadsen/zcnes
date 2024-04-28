@@ -25,9 +25,40 @@ struct zc_cart {
     size_t prg_rom_size;
 };
 
+struct ppu_ctrl {
+    uint8_t nt_addr;
+    bool vram_inc;
+    bool sprite_pt;
+    bool bg_pt;
+    bool sprite_size;
+    bool nmi;
+};
+
+struct zc_ppu {
+    uint8_t ctrl;
+    uint8_t mask;
+    uint8_t status;
+
+    bool vblank;
+
+    /// VRAM address.
+    uint16_t v;
+    /// Temporary VRAM address.
+    uint16_t t;
+    /// Fine X scroll.
+    uint8_t x;
+    /// Write toggle.
+    bool w;
+
+    uint8_t io_bus;
+
+    void (*on_frame)(uint8_t *);
+};
+
 struct zc_nes {
     struct zc_cpu cpu;
     struct zc_cart cart;
+    struct zc_ppu ppu;
 
     uint8_t ram[0x800];
 };
