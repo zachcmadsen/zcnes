@@ -17,12 +17,19 @@ struct zc_cpu {
 #endif
 };
 
+enum zc_mirror {
+    zc_mirror_horizontal,
+    zc_mirror_vertical,
+};
+
 struct zc_cart {
     uint8_t prg_ram[0x2000];
     uint8_t *prg_rom;
     // TODO: Can size fields/variables be uint32_t? Can the size ever be
     // larger?
     size_t prg_rom_size;
+
+    enum zc_mirror mirror;
 };
 
 struct ppu_ctrl {
@@ -51,6 +58,9 @@ struct zc_ppu {
     bool w;
 
     uint8_t io_bus;
+
+    uint8_t vram[2048];
+    uint8_t pal_ram[32];
 
     void (*on_frame)(uint8_t *);
 };

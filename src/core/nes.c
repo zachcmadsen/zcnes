@@ -33,6 +33,74 @@ static bool overflowing_sub(uint8_t a, uint8_t b, uint8_t *res) {
 #endif
 }
 
+uint8_t cart_read_prg_ram(struct zc_nes *nes, uint16_t addr) {
+    return nes->cart.prg_ram[addr - 0x6000];
+}
+
+void cart_write_prg_ram(struct zc_nes *nes, uint16_t addr, uint8_t data) {
+    nes->cart.prg_ram[addr - 0x6000] = data;
+}
+
+uint8_t cart_read_prg_rom(struct zc_nes *nes, uint16_t addr) {
+    return nes->cart.prg_rom[(addr - 0x8000) % nes->cart.prg_rom_size];
+}
+
+void cart_write_prg_rom(struct zc_nes *nes, uint16_t addr, uint8_t data) {
+    nes->cart.prg_rom[(addr - 0x8000) % nes->cart.prg_rom_size] = data;
+}
+
+uint8_t cart_read_chr_rom(struct zc_nes *nes, uint16_t addr) {
+    return 0;
+}
+
+uint16_t ppu_mirror_nt(struct zc_nes *nes, uint16_t addr) {
+    switch (nes->cart.mirror) {
+    case zc_mirror_horizontal:
+        if (addr >= 0x2400 && addr <= 0x27FF) {
+            return addr - 0x0400;
+        } else if (addr >= 0x2800 && addr <= 0x2BFF) {
+            return addr - 0x0400;
+        } else if (addr >= 0x2C00 && addr <= 0x2FFF) {
+            return addr - 0x0800;
+        } else {
+            return addr;
+        }
+    case zc_mirror_vertical:
+        if (addr >= 0x2800 && addr <= 0x2FFF) {
+            return addr - 0x0800;
+        } else {
+            return addr;
+        }
+    };
+}
+
+uint16_t ppu_mirror_pal(struct zc_nes *nes, uint16_t addr) {
+    addr &= 0x3F1F;
+    if (addr == 0x3F10 || addr == 0x3F14 || addr == 0x3F18 || addr == 0x3F1C) {
+        return addr - 0x0010;
+    } else {
+        return addr;
+    }
+}
+
+uint8_t ppu_read(struct zc_nes *nes, uint16_t addr) {
+    if (addr <= 0x1FFF) {
+        return cart_read_chr_rom(nes, addr);
+    } else if (addr >= 0x2000 && addr <= 0x3EFF) {
+        return nes->ppu.vram[ppu_mirror_nt(nes, addr) - 0x2000];
+    } else if (addr >= 0x3F00 && addr <= 0x3FFF) {
+        return nes->ppu.pal_ram[ppu_mirror_pal(nes, addr) - 0x3F00];
+    }
+}
+
+void ppu_write(struct zc_nes *nes, uint16_t addr, uint8_t data) {
+    if (addr >= 0x2000 && addr <= 0x3EFF) {
+        nes->ppu.vram[ppu_mirror_nt(nes, addr) - 0x2000] = data;
+    } else if (addr >= 0x3F00 && addr <= 0x3FFF) {
+        nes->ppu.pal_ram[ppu_mirror_pal(nes, addr) - 0x3F00] = data;
+    }
+}
+
 void ppu_write_ctrl(struct zc_nes *nes, uint8_t data) {
     // TODO: Inline the bitwise ANDs to take advantage of short circuiting.
     const bool vblank_flag = nes->ppu.status & 0x80;
@@ -77,22 +145,6 @@ void ppu_write_addr(struct zc_nes *nes, uint8_t data) {
         nes->ppu.v = nes->ppu.t;
         nes->ppu.w = false;
     }
-}
-
-uint8_t cart_read_prg_ram(struct zc_nes *nes, uint16_t addr) {
-    return nes->cart.prg_ram[addr - 0x6000];
-}
-
-void cart_write_prg_ram(struct zc_nes *nes, uint16_t addr, uint8_t data) {
-    nes->cart.prg_ram[addr - 0x6000] = data;
-}
-
-uint8_t cart_read_prg_rom(struct zc_nes *nes, uint16_t addr) {
-    return nes->cart.prg_rom[(addr - 0x8000) % nes->cart.prg_rom_size];
-}
-
-void cart_write_prg_rom(struct zc_nes *nes, uint16_t addr, uint8_t data) {
-    nes->cart.prg_rom[(addr - 0x8000) % nes->cart.prg_rom_size] = data;
 }
 
 static uint8_t read_byte(struct zc_nes *nes, uint16_t addr) {
