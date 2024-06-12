@@ -1,2 +1,7 @@
 /build*
 /.cache
+
+.vs
+
+bin
+obj
