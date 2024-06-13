@@ -38,6 +38,7 @@ public class CpuTests
             {
                 bus.Ram[ramState.Addr] = ramState.Data;
             }
+            bus.Cycles.Clear();
 
             cpu.Step();
 
@@ -50,6 +51,13 @@ public class CpuTests
             foreach (var ramState in test.Final.Ram)
             {
                 Assert.AreEqual(ramState.Data, bus.Ram[ramState.Addr]);
+            }
+            Assert.AreEqual(test.Cycles.Count, bus.Cycles.Count);
+            for (int i = 0; i < test.Cycles.Count; ++i)
+            {
+                Assert.AreEqual(test.Cycles[i].Addr, bus.Cycles[i].Addr);
+                Assert.AreEqual(test.Cycles[i].Data, bus.Cycles[i].Data);
+                Assert.AreEqual(test.Cycles[i].Kind, bus.Cycles[i].Kind);
             }
         }
     }
