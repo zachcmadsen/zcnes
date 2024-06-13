@@ -5,7 +5,11 @@ namespace ZcNes.Core.Tests;
 
 internal class RamStateJsonConverter : JsonConverter<RamState>
 {
-    public override RamState? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override RamState? Read(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options
+    )
     {
         if (reader.TokenType != JsonTokenType.StartArray)
         {

@@ -15,8 +15,11 @@ public class CpuTests
     public void ProcessorTest(string opc)
     {
         string jsonString = File.ReadAllText($"{opc}.json");
-        
-        List<ProcessorTest>? tests = JsonSerializer.Deserialize<List<ProcessorTest>>(jsonString, jsonSerializerOptions);
+
+        List<ProcessorTest>? tests = JsonSerializer.Deserialize<List<ProcessorTest>>(
+            jsonString,
+            jsonSerializerOptions
+        );
         Assert.IsNotNull(tests);
         Assert.AreEqual(10_000, tests.Count);
 
@@ -38,12 +41,12 @@ public class CpuTests
 
             cpu.Step();
 
-            Assert.AreEqual(cpu.A, test.Final.A);
-            Assert.AreEqual(cpu.X, test.Final.X);
-            Assert.AreEqual(cpu.Y, test.Final.Y);
-            Assert.AreEqual(cpu.Pc, test.Final.Pc);
-            Assert.AreEqual(cpu.S, test.Final.S);
-            Assert.AreEqual(cpu.P, test.Final.P);
+            Assert.AreEqual(test.Final.A, cpu.A);
+            Assert.AreEqual(test.Final.X, cpu.X);
+            Assert.AreEqual(test.Final.Y, cpu.Y);
+            Assert.AreEqual(test.Final.Pc, cpu.Pc);
+            Assert.AreEqual(test.Final.S, cpu.S);
+            Assert.AreEqual(test.Final.P, cpu.P);
             foreach (var ramState in test.Final.Ram)
             {
                 Assert.AreEqual(ramState.Data, bus.Ram[ramState.Addr]);
