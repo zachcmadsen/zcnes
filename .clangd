@@ -1,4 +1,5 @@
 Diagnostics:
-  UnusedIncludes: None
+  MissingIncludes: Strict
+  UnusedIncludes: Strict
 InlayHints:
   Enabled: No
