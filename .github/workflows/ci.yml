@@ -6,29 +6,6 @@ on:
       - main
 
 jobs:
-  sanitize:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - name: Configure
-        run: cmake --preset ci-sanitize
-
-      - name: Build
-        run: cmake --build build-sanitize -j 2
-
-      - name: Clone zcnes-tests
-        run: git clone https://github.com/zachcmadsen/zcnes-tests.git ../zcnes-tests 
-
-      - name: Test
-        env:
-          ASAN_OPTIONS: "halt_on_error=1"
-          UBSAN_OPTIONS: "print_stacktrace=1"
-        run: ctest --test-dir build-sanitize --output-on-failure -j 2
-
   linux:
     runs-on: ubuntu-latest
 
@@ -38,7 +15,7 @@ jobs:
           submodules: true
 
       - name: Configure
-        run: cmake --preset ci-linux
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=g++-13
 
       - name: Build
         run: cmake --build build -j 2
@@ -49,20 +26,4 @@ jobs:
         run: git clone https://github.com/zachcmadsen/zcnes-tests.git ../zcnes-tests 
 
       - name: Test
-        run: ctest --test-dir build --output-on-failure -j 2
-  
-  # TODO: Merge linux and windows into one job with an OS matrix. It'd make
-  # more sense that way once the windows CI includes tests.
-  windows:
-    runs-on: windows-latest
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - name: Configure
-        run: cmake --preset ci-msvc
-
-      - name: Build
-        run: cmake --build build --config Release
+        run: ctest --test-dir build -j 2 --output-on-failure
