@@ -39,6 +39,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install Ninja
+        shell: bash
+        run: |
+          curl -L -o ninja-win.zip https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-win.zip
+          unzip ninja-win.zip
+          echo "$GITHUB_WORKSPACE/ninja.exe" >> $GITHUB_PATH
+
       - name: Configure
         run: cmake --preset windows
 
