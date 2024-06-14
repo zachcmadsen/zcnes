@@ -20,7 +20,7 @@ jobs:
           sudo ./llvm.sh 17
 
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=clang++-17
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang-17 -DCMAKE_CXX_COMPILER=clang++-17
 
       - name: Build
         run: cmake --build build -j 2
