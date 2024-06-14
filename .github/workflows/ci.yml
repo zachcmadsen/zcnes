@@ -32,3 +32,21 @@ jobs:
 
       - name: Test
         run: ctest --test-dir build -j 2 --output-on-failure
+
+  windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake --preset windows
+
+      - name: Build
+        run: cmake --build build
+      
+      - name: Clone zcnes-tests
+        run: git clone https://github.com/zachcmadsen/zcnes-tests.git ../zcnes-tests 
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
