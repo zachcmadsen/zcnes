@@ -2,63 +2,14 @@
     "version": 3,
     "configurePresets": [
         {
-            "name": "flags-linux",
-            "hidden": true,
-            "cacheVariables": {
-                "ZCNES_C_FLAGS": "-Wall -Wextra"
-            }
-        },
-        {
             "name": "dev",
-            "inherits": [
-                "flags-linux"
-            ],
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_CXX_COMPILER": "clang++",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "CMAKE_C_COMPILER": "gcc"
-            }
-        },
-        {
-            "name": "ci-linux",
-            "inherits": [
-                "flags-linux"
-            ],
-            "generator": "Unix Makefiles",
-            "binaryDir": "${sourceDir}/build",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_C_COMPILER": "gcc"
-            }
-        },
-        {
-            "name": "ci-sanitize",
-            "inherits": [
-                "ci-linux"
-            ],
-            "binaryDir": "${sourceDir}/build-sanitize",
-            "cacheVariables": {
-                "ZCNES_C_FLAGS_SANITIZE": "-g -fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all",
-                "ZCNES_LINKER_FLAGS_SANITIZE": "-fsanitize=address -fsanitize=undefined"
-            }
-        },
-        {
-            "name": "ci-msvc",
-            "binaryDir": "${sourceDir}/build",
-            "cacheVariables": {
-                "CMAKE_CONFIGURATION_TYPES": "Release",
-                "ZCNES_C_FLAGS": "/W4"
-            }
-        },
-        {
-            "name": "coverage",
-            "binaryDir": "${sourceDir}/build-coverage",
-            "cacheVariables": {
-                "CMAKE_C_COMPILER": "gcc",
-                "ZCNES_C_FLAGS_COVERAGE": "-O0 -g --coverage",
-                "ZCNES_LINKER_FLAGS_COVERAGE": "--coverage"
+                "ZCNES_CXX_FLAGS": "-Wall -Wextra -Wpedantic -Wconversion -Wcast-align -Wcast-qual -Wshadow -Wnull-dereference -Wold-style-cast"
             }
         }
     ]
