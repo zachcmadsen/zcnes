@@ -33,7 +33,7 @@ struct ProcessorTestBus {
 
 void run(std::string_view opc) {
     ProcessorTestBus bus;
-    zcnes::Cpu<ProcessorTestBus> cpu(bus);
+    zcnes::Cpu cpu(bus);
 
     const auto tests = loadTests(
         fmt::format("{}/ProcessorTests/{}.json", ZCNES_TESTS_PATH, opc));

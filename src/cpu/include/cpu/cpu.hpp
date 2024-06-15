@@ -42,7 +42,7 @@ template <Bus T> class Cpu {
     std::uint16_t pc{0};
     StatusFlags p{};
 
-    Cpu(T &bus) : bus(bus) {};
+    explicit Cpu(T &bus) : bus(bus) {};
 
     void step() {
         const auto opc = bus.read(pc++);
