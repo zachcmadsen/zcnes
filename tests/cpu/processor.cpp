@@ -40,7 +40,7 @@ void run(std::string_view opc) {
     for (const auto &test : tests) {
         cpu.pc = test.initial.pc;
         cpu.a = test.initial.a;
-        for (auto &[addr, data] : test.initial.ram) {
+        for (const auto &[addr, data] : test.initial.ram) {
             bus.ram[addr] = static_cast<std::uint8_t>(data);
         }
 
@@ -48,14 +48,14 @@ void run(std::string_view opc) {
 
         REQUIRE(cpu.pc == test.final.pc);
         REQUIRE(cpu.a == test.final.a);
-        for (auto &[addr, data] : test.final.ram) {
+        for (const auto &[addr, data] : test.final.ram) {
             REQUIRE(bus.ram[addr] == data);
         }
     }
 }
 
-}
-
 // clang-format off
 TEST_CASE("ProcessorTests.A5") { run("a5"); }
 // clang-format on
+
+}

@@ -9,3 +9,6 @@ test: build
 
 clean:
     rm -rf build
+
+tidy:
+    clang-tidy -p build tests/cpu/*.cpp
