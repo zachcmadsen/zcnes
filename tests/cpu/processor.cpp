@@ -39,7 +39,11 @@ void run(std::string_view opc) {
         fmt::format("{}/ProcessorTests/{}.json", ZCNES_TESTS_PATH, opc));
     for (const auto &test : tests) {
         cpu.pc = test.initial.pc;
+        cpu.s = test.initial.s;
         cpu.a = test.initial.a;
+        cpu.x = test.initial.x;
+        cpu.y = test.initial.y;
+        cpu.p = zcnes::StatusFlags::from_byte(test.initial.p);
         for (const auto &[addr, data] : test.initial.ram) {
             bus.ram[addr] = static_cast<std::uint8_t>(data);
         }
@@ -47,7 +51,11 @@ void run(std::string_view opc) {
         cpu.step();
 
         REQUIRE(cpu.pc == test.final.pc);
+        REQUIRE(cpu.s == test.final.s);
         REQUIRE(cpu.a == test.final.a);
+        REQUIRE(cpu.x == test.final.x);
+        REQUIRE(cpu.y == test.final.y);
+        REQUIRE(cpu.p.to_byte() == test.final.p);
         for (const auto &[addr, data] : test.final.ram) {
             REQUIRE(bus.ram[addr] == data);
         }
