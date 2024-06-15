@@ -44,10 +44,9 @@ jobs:
         run: |
           curl -L -o ninja-win.zip https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-win.zip
           unzip ninja-win.zip
-          export ninja="$GITHUB_WORKSPACE/ninja.exe"
 
       - name: Configure
-        run: cmake --preset windows
+        run: cmake --preset windows -DCMAKE_MAKE_PROGRAM=ninja.exe
 
       - name: Build
         run: cmake --build build
