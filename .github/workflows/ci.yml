@@ -12,6 +12,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install Ninja
+        run: |
+          curl -L -o ninja-win.zip https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-win.zip
+          unzip ninja-win.zip -d bin
+          echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
+
       - name: Install Clang 17
         # The commands are from https://apt.llvm.org.
         run: | 
@@ -20,10 +26,10 @@ jobs:
           sudo ./llvm.sh 17
 
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang-17 -DCMAKE_CXX_COMPILER=clang++-17
+        run: cmake -S . -B build -GNinja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang-17 -DCMAKE_CXX_COMPILER=clang++-17
 
       - name: Build
-        run: cmake --build build -j 2
+        run: cmake --build build
 
       # TODO: Consider making zcnes-tests a submodule. I went with a separate
       # repo for now since it's less coupled.
@@ -31,7 +37,7 @@ jobs:
         run: git clone https://github.com/zachcmadsen/zcnes-tests.git ../zcnes-tests 
 
       - name: Test
-        run: ctest --test-dir build -j 2 --output-on-failure
+        run: ctest --test-dir build --output-on-failure
 
   windows:
     runs-on: windows-latest
@@ -40,13 +46,6 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: ilammy/msvc-dev-cmd@v1
-
-      # - name: Install Ninja
-      #   shell: bash
-      #   run: |
-      #     curl -L -o ninja-win.zip https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-win.zip
-      #     unzip ninja-win.zip -d bin
-      #     echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
 
       - name: Configure
         run: cmake --preset windows
