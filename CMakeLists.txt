@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_subdirectory(src/cpu)
+add_subdirectory(src/core)
 
 include(CTest)
 enable_testing()
