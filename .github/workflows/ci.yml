@@ -16,7 +16,7 @@ jobs:
         run: |
           curl -L -o ninja-win.zip https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-win.zip
           unzip ninja-win.zip -d bin
-          echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
+          echo "$PWD/bin" >> $GITHUB_PATH
 
       - name: Install Clang 17
         # The commands are from https://apt.llvm.org.
