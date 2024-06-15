@@ -5,7 +5,7 @@ configure: clean
     cmake --preset dev
 
 test: build
-    ctest --test-dir build
+    ctest --test-dir build --output-on-failure
 
 clean:
     rm -rf build

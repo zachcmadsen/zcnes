@@ -13,7 +13,7 @@ build: build/build.ninja
 
 .PHONY: test
 test: build
-	ctest --test-dir build -j $$(nproc)
+	ctest --test-dir build -j $$(nproc) --output-on-failure
 
 .PHONY: clean
 clean:
