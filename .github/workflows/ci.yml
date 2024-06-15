@@ -46,7 +46,6 @@ jobs:
           unzip ninja-win.zip -d bin
           echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
 
-
       - name: Configure
         run: cmake --preset windows
 
