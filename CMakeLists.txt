@@ -15,7 +15,8 @@ FetchContent_Declare(
 message(STATUS "Fetching fmt...")
 FetchContent_MakeAvailable(fmt)
 
-add_subdirectory(src/zcnes)
+add_subdirectory(src/cpu)
+add_subdirectory(src/core)
 
 include(CTest)
 enable_testing()
