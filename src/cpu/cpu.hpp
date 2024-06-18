@@ -23,9 +23,8 @@ struct Status {
 };
 static_assert(sizeof(Status) == 1);
 
-template <Addressable T>
-class Cpu {
-   public:
+template <Addressable T> class Cpu {
+  public:
     std::uint16_t pc{0};
     std::uint8_t a{0};
     std::uint8_t x{0};
@@ -33,7 +32,7 @@ class Cpu {
     std::uint8_t s{0xFD};
     Status p{false, false, true, false, false, true, false, false};
 
-    explicit Cpu(T& bus) : bus(bus){};
+    explicit Cpu(T &bus) : bus(bus){};
 
     void step() {
         const auto opc = bus.read(pc++);
@@ -43,8 +42,8 @@ class Cpu {
         }
     }
 
-   private:
-    T& bus;
+  private:
+    T &bus;
 
     std::uint16_t addr{0};
 
