@@ -2,12 +2,12 @@
 #include <cstddef>
 #include <cstdint>
 #include <string_view>
+#include <vector>
 
-#include <cpu/cpu.hpp>
+#include <cpu.hpp>
 #include <doctest/doctest.h>
 #include <fmt/core.h>
-
-#include "util.hpp"
+#include <rfl/json/load.hpp>
 
 #ifdef _ZCNES_TESTS_PATH
 #define ZCNES_TESTS_PATH _ZCNES_TESTS_PATH
@@ -17,10 +17,25 @@
 
 namespace {
 
-constexpr size_t AddrSpaceSize = 0x10000;
+constexpr std::size_t addrSpaceSize = 0x10000;
+
+struct CpuState {
+    std::uint16_t pc;
+    std::uint8_t s;
+    std::uint8_t a;
+    std::uint8_t x;
+    std::uint8_t y;
+    std::uint8_t p;
+    std::vector<std::array<std::uint16_t, 2>> ram;
+};
+
+struct ProcessorTest {
+    CpuState initial;
+    CpuState final;
+};
 
 struct ProcessorTestBus {
-    std::array<std::uint8_t, AddrSpaceSize> ram{0};
+    std::array<std::uint8_t, addrSpaceSize> ram{0};
 
     std::uint8_t read(std::uint16_t addr) {
         return ram[addr];
@@ -31,19 +46,21 @@ struct ProcessorTestBus {
     }
 };
 
-void run(std::string_view opc) {
+void run(std::string_view opcode) {
     ProcessorTestBus bus;
     zcnes::Cpu cpu(bus);
 
-    const auto tests = loadTests(
-        fmt::format("{}/ProcessorTests/{}.json", ZCNES_TESTS_PATH, opc));
+    const auto filename =
+        fmt::format("{}/ProcessorTests/{}.json", ZCNES_TESTS_PATH, opcode);
+    const auto tests =
+        rfl::json::load<std::vector<ProcessorTest>>(filename).value();
     for (const auto &test : tests) {
         cpu.pc = test.initial.pc;
         cpu.s = test.initial.s;
         cpu.a = test.initial.a;
         cpu.x = test.initial.x;
         cpu.y = test.initial.y;
-        cpu.p = zcnes::StatusFlags::from_byte(test.initial.p);
+        cpu.p = zcnes::Status::from_byte(test.initial.p);
         for (const auto &[addr, data] : test.initial.ram) {
             bus.ram[addr] = static_cast<std::uint8_t>(data);
         }

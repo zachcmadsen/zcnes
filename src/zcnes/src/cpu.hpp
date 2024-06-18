@@ -6,12 +6,12 @@
 namespace zcnes {
 
 template <typename T>
-concept Bus = requires(T t, std::uint16_t addr, std::uint8_t data) {
+concept Addressable = requires(T t, std::uint16_t addr, std::uint8_t data) {
     { t.read(addr) } -> std::same_as<std::uint8_t>;
     { t.write(addr, data) } -> std::same_as<void>;
 };
 
-struct StatusFlags {
+struct Status {
     bool c{false};
     bool z{false};
     bool i{true};
@@ -25,7 +25,7 @@ struct StatusFlags {
                                          1 << 5 | v << 6 | n << 7);
     }
 
-    static StatusFlags from_byte(std::uint8_t byte) {
+    static Status from_byte(std::uint8_t byte) {
         return {static_cast<bool>(byte & 0x01), static_cast<bool>(byte & 0x02),
                 static_cast<bool>(byte & 0x04), static_cast<bool>(byte & 0x08),
                 static_cast<bool>(byte & 0x10), static_cast<bool>(byte & 0x40),
@@ -33,16 +33,16 @@ struct StatusFlags {
     }
 };
 
-template <Bus T> class Cpu {
+template <Addressable T> class Cpu {
   public:
     std::uint8_t a{0};
     std::uint8_t x{0};
     std::uint8_t y{0};
     std::uint8_t s{0xFD};
     std::uint16_t pc{0};
-    StatusFlags p{};
+    Status p{};
 
-    explicit Cpu(T &bus) : bus(bus) {};
+    explicit Cpu(T &bus) : bus(bus){};
 
     void step() {
         const auto opc = bus.read(pc++);
