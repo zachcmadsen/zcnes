@@ -12,7 +12,7 @@ class Bus {
     void write(std::uint16_t addr, std::uint8_t data);
 
   private:
-    std::array<std::uint8_t, 0x800> ram{0};
+    std::array<std::uint8_t, 0x800> ram{};
 };
 
 }
