@@ -42,6 +42,12 @@ template <Addressable T> class Cpu {
         } else if (opc == 0xAD) {
             abs();
             lda();
+        } else if (opc == 0xB5) {
+            zpx();
+            lda();
+        } else if (opc == 0xB6) {
+            zpy();
+            ldx();
         } else if (opc == 0xBD) {
             abx<false>();
             lda();
@@ -86,10 +92,28 @@ template <Addressable T> class Cpu {
         addr = bus.read(pc++);
     }
 
+    void zpx() {
+        addr = bus.read(pc++);
+        bus.read(addr);
+        addr = static_cast<std::uint8_t>(addr + x);
+    }
+
+    void zpy() {
+        addr = bus.read(pc++);
+        bus.read(addr);
+        addr = static_cast<std::uint8_t>(addr + y);
+    }
+
     void lda() {
         a = bus.read(addr);
         p.z = a == 0;
         p.n = a & 0x80;
+    }
+
+    void ldx() {
+        x = bus.read(addr);
+        p.z = x == 0;
+        p.n = x & 0x80;
     }
 };
 
