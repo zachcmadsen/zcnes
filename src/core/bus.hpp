@@ -7,7 +7,7 @@ namespace zcnes {
 
 class Bus {
   public:
-    [[nodiscard]] std::uint8_t read(std::uint16_t addr);
+    std::uint8_t read(std::uint16_t addr);
 
     void write(std::uint16_t addr, std::uint8_t data);
 

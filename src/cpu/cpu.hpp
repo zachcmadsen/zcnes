@@ -39,6 +39,15 @@ template <Addressable T> class Cpu {
         if (opc == 0xA5) {
             zpg();
             lda();
+        } else if (opc == 0xAD) {
+            abs();
+            lda();
+        } else if (opc == 0xBD) {
+            abx<false>();
+            lda();
+        } else if (opc == 0xB9) {
+            aby<false>();
+            lda();
         }
     }
 
@@ -46,6 +55,32 @@ template <Addressable T> class Cpu {
     T &bus;
 
     std::uint16_t addr{0};
+
+    void abs() {
+        const auto low = bus.read(pc++);
+        const auto high = bus.read(pc++);
+        addr = static_cast<std::uint16_t>(low | high << 8);
+    }
+
+    template <bool write> void abx() {
+        std::uint8_t low = bus.read(pc++);
+        const auto overflow = __builtin_add_overflow(low, x, &low);
+        const auto high = bus.read(pc++);
+        if (write || overflow) {
+            bus.read(static_cast<std::uint16_t>(low | high << 8));
+        }
+        addr = static_cast<std::uint16_t>(low | (high + overflow) << 8);
+    }
+
+    template <bool write> void aby() {
+        std::uint8_t low = bus.read(pc++);
+        const auto overflow = __builtin_add_overflow(low, y, &low);
+        const auto high = bus.read(pc++);
+        if (write || overflow) {
+            bus.read(static_cast<std::uint16_t>(low | high << 8));
+        }
+        addr = static_cast<std::uint16_t>(low | (high + overflow) << 8);
+    }
 
     void zpg() {
         addr = bus.read(pc++);

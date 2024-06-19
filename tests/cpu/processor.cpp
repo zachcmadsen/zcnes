@@ -57,6 +57,9 @@ void run(std::string_view opc) {
 
 // clang-format off
 TEST_CASE("ProcessorTests.A5") { run("a5"); }
+TEST_CASE("ProcessorTests.AD") { run("ad"); }
+TEST_CASE("ProcessorTests.BD") { run("bd"); }
+TEST_CASE("ProcessorTests.B9") { run("b9"); }
 // clang-format on
 
 }
