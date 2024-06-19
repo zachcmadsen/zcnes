@@ -19,8 +19,8 @@
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_C_COMPILER": "clang",
-                "CMAKE_CXX_COMPILER": "clang++",
+                "CMAKE_C_COMPILER": "clang-17",
+                "CMAKE_CXX_COMPILER": "clang++-17",
                 "CMAKE_CXX_FLAGS": "-fsanitize=address",
                 "ZCNES_CXX_FLAGS": "-Werror -Wall -Wextra -Wconversion -Wsign-conversion -pedantic-errors"
             }
