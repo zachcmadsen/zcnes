@@ -1,5 +1,6 @@
 include(FetchContent)
 include(${PROJECT_SOURCE_DIR}/cmake/zcnes.cmake)
+include(${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake)
 
 FetchContent_Declare(
     reflect-cpp
@@ -20,5 +21,4 @@ target_compile_definitions(cpu-test PRIVATE _ZCNES_TESTS_PATH="${CMAKE_SOURCE_DI
 
 zcnes_compile_options(cpu-test)
 
-include(${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake)
 doctest_discover_tests(cpu-test)
