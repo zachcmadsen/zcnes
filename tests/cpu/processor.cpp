@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <string_view>
+#include <vector>
 
 #include <cpu.hpp>
 #include <doctest/doctest.h>
@@ -14,13 +15,17 @@ namespace {
 constexpr std::size_t addrSpaceSize = 0x10000;
 
 struct ProcessorTestBus {
-    std::array<std::uint8_t, addrSpaceSize> ram{0};
+    std::array<std::uint8_t, addrSpaceSize> ram{};
+    std::vector<BusState> cycles{};
 
     std::uint8_t read(std::uint16_t addr) {
-        return ram[addr];
+        const auto data = ram[addr];
+        cycles.emplace_back(addr, data, "read");
+        return data;
     }
 
     void write(std::uint16_t addr, std::uint8_t data) {
+        cycles.emplace_back(addr, data, "write");
         ram[addr] = data;
     }
 };
@@ -38,8 +43,9 @@ void run(std::string_view opc) {
         cpu.y = test.initial.y;
         cpu.p = std::bit_cast<zcnes::Status>(test.initial.p);
         for (const auto &[addr, data] : test.initial.ram) {
-            bus.ram[addr] = static_cast<std::uint8_t>(data);
+            bus.ram[addr] = data;
         }
+        bus.cycles.clear();
 
         cpu.step();
 
@@ -52,6 +58,7 @@ void run(std::string_view opc) {
         for (const auto &[addr, data] : test.final.ram) {
             REQUIRE(bus.ram[addr] == data);
         }
+        REQUIRE(bus.cycles == test.cycles);
     }
 }
 

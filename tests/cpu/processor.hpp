@@ -1,9 +1,14 @@
 #pragma once
 
-#include <array>
 #include <cstdint>
+#include <string>
 #include <string_view>
+#include <tuple>
 #include <vector>
+
+using RamState = std::tuple<std::uint16_t, std::uint8_t>;
+
+using BusState = std::tuple<std::uint16_t, std::uint8_t, std::string>;
 
 struct CpuState {
     std::uint16_t pc;
@@ -12,12 +17,13 @@ struct CpuState {
     std::uint8_t x;
     std::uint8_t y;
     std::uint8_t p;
-    std::vector<std::array<std::uint16_t, 2>> ram;
+    std::vector<RamState> ram;
 };
 
 struct ProcessorTest {
     CpuState initial;
     CpuState final;
+    std::vector<BusState> cycles;
 };
 
 std::vector<ProcessorTest> load_tests(std::string_view opc);
