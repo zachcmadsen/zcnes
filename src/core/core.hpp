@@ -10,7 +10,7 @@ class Core {
   public:
     Core();
 
-    void step();
+    void Step();
 
   private:
     Bus bus;

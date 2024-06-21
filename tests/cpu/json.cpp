@@ -1,4 +1,4 @@
-#include <string_view>
+#include <cstdint>
 #include <vector>
 
 #include <fmt/core.h>
@@ -12,8 +12,8 @@
 #define ZCNES_TESTS_PATH ""
 #endif
 
-std::vector<ProcessorTest> load_tests(std::string_view opc) {
+std::vector<ProcessorTest> LoadTests(std::uint8_t opcode) {
     const auto filename =
-        fmt::format("{}/ProcessorTests/{}.json", ZCNES_TESTS_PATH, opc);
+        fmt::format("{}/ProcessorTests/{:02x}.json", ZCNES_TESTS_PATH, opcode);
     return rfl::json::load<std::vector<ProcessorTest>>(filename).value();
 }

@@ -2,7 +2,6 @@
 
 #include <cstdint>
 #include <string>
-#include <string_view>
 #include <tuple>
 #include <vector>
 
@@ -26,4 +25,4 @@ struct ProcessorTest {
     std::vector<BusState> cycles;
 };
 
-std::vector<ProcessorTest> load_tests(std::string_view opc);
+std::vector<ProcessorTest> LoadTests(std::uint8_t opcode);

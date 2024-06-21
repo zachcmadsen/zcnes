@@ -5,8 +5,8 @@ namespace zcnes {
 Core::Core() : cpu(bus) {
 }
 
-void Core::step() {
-    cpu.step();
+void Core::Step() {
+    cpu.Step();
 }
 
 }

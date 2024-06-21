@@ -2,7 +2,6 @@
 #include <bit>
 #include <cstddef>
 #include <cstdint>
-#include <string_view>
 #include <vector>
 
 #include <cpu.hpp>
@@ -12,29 +11,29 @@
 
 namespace {
 
-constexpr std::size_t addrSpaceSize = 0x10000;
+constexpr std::size_t AddrSpaceSize = 0x10000;
 
 struct ProcessorTestBus {
-    std::array<std::uint8_t, addrSpaceSize> ram{};
+    std::array<std::uint8_t, AddrSpaceSize> ram{};
     std::vector<BusState> cycles{};
 
-    std::uint8_t read(std::uint16_t addr) {
+    std::uint8_t Read(std::uint16_t addr) {
         const auto data = ram[addr];
         cycles.emplace_back(addr, data, "read");
         return data;
     }
 
-    void write(std::uint16_t addr, std::uint8_t data) {
+    void Write(std::uint16_t addr, std::uint8_t data) {
         cycles.emplace_back(addr, data, "write");
         ram[addr] = data;
     }
 };
 
-void run(std::string_view opc) {
+void Run(std::uint8_t opcode) {
     ProcessorTestBus bus;
     zcnes::Cpu cpu(bus);
 
-    const auto tests = load_tests(opc);
+    const auto tests = LoadTests(opcode);
     for (const auto &test : tests) {
         cpu.pc = test.initial.pc;
         cpu.s = test.initial.s;
@@ -47,7 +46,7 @@ void run(std::string_view opc) {
         }
         bus.cycles.clear();
 
-        cpu.step();
+        cpu.Step();
 
         REQUIRE(cpu.pc == test.final.pc);
         REQUIRE(cpu.s == test.final.s);
@@ -63,12 +62,12 @@ void run(std::string_view opc) {
 }
 
 // clang-format off
-TEST_CASE("ProcessorTests.A5") { run("a5"); }
-TEST_CASE("ProcessorTests.AD") { run("ad"); }
-TEST_CASE("ProcessorTests.B5") { run("b5"); }
-TEST_CASE("ProcessorTests.B6") { run("b6"); }
-TEST_CASE("ProcessorTests.BD") { run("bd"); }
-TEST_CASE("ProcessorTests.B9") { run("b9"); }
+TEST_CASE("ProcessorTests.A5") { Run(0xA5); }
+TEST_CASE("ProcessorTests.AD") { Run(0xAD); }
+TEST_CASE("ProcessorTests.B5") { Run(0xB5); }
+TEST_CASE("ProcessorTests.B6") { Run(0xB6); }
+TEST_CASE("ProcessorTests.B9") { Run(0xB9); }
+TEST_CASE("ProcessorTests.BD") { Run(0xBD); }
 // clang-format on
 
 }
