@@ -5,6 +5,19 @@
 
 namespace zcnes {
 
+namespace num {
+
+inline constexpr std::uint16_t Combine(std::uint8_t high, std::uint8_t low) {
+  return static_cast<std::uint16_t>(static_cast<unsigned>(high) << 8 |
+                                    static_cast<unsigned>(low));
+}
+
+inline constexpr std::uint8_t WrappingAdd(std::uint8_t a, std::uint8_t b) {
+  return static_cast<std::uint8_t>(a + b);
+}
+
+}  // namespace num
+
 template <typename T>
 concept Addressable = requires(T t, std::uint16_t addr, std::uint8_t data) {
   { t.Read(addr) } -> std::same_as<std::uint8_t>;
@@ -66,18 +79,18 @@ class Cpu {
   void Abs() {
     const auto low = bus.Read(pc++);
     const auto high = bus.Read(pc++);
-    effective_addr = static_cast<std::uint16_t>(low | high << 8);
+    effective_addr = num::Combine(high, low);
   }
 
   template <bool write>
   void Abx() {
-    std::uint8_t low = bus.Read(pc++);
+    auto low = bus.Read(pc++);
     const auto overflow = __builtin_add_overflow(low, x, &low);
     const auto high = bus.Read(pc++);
     if (write || overflow) {
-      bus.Read(static_cast<std::uint16_t>(low | high << 8));
+      bus.Read(num::Combine(high, low));
     }
-    effective_addr = (low | (high + overflow) << 8);
+    effective_addr = num::Combine(high + overflow, low);
   }
 
   template <bool write>
@@ -86,23 +99,23 @@ class Cpu {
     const auto overflow = __builtin_add_overflow(low, y, &low);
     const auto high = bus.Read(pc++);
     if (write || overflow) {
-      bus.Read(static_cast<std::uint16_t>(low | high << 8));
+      bus.Read(num::Combine(high, low));
     }
-    effective_addr = static_cast<std::uint16_t>(low | (high + overflow) << 8);
+    effective_addr = num::Combine(high + overflow, low);
   }
 
   void Zpg() { effective_addr = bus.Read(pc++); }
 
   void Zpx() {
-    effective_addr = bus.Read(pc++);
-    bus.Read(effective_addr);
-    effective_addr = static_cast<std::uint8_t>(effective_addr + x);
+    auto addr = bus.Read(pc++);
+    bus.Read(addr);
+    effective_addr = num::WrappingAdd(addr, x);
   }
 
   void Zpy() {
-    effective_addr = bus.Read(pc++);
-    bus.Read(effective_addr);
-    effective_addr = static_cast<std::uint8_t>(effective_addr + y);
+    auto addr = bus.Read(pc++);
+    bus.Read(addr);
+    effective_addr = num::WrappingAdd(addr, y);
   }
 
   void Lda() {
