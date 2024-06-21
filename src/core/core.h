@@ -7,12 +7,12 @@
 namespace zcnes {
 
 class Core {
-  public:
+   public:
     Core();
 
     void Step();
 
-  private:
+   private:
     Bus bus;
     Cpu<Bus> cpu;
 };

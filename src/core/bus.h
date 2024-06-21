@@ -6,12 +6,12 @@
 namespace zcnes {
 
 class Bus {
-  public:
+   public:
     std::uint8_t Read(std::uint16_t addr);
 
     void Write(std::uint16_t addr, std::uint8_t data);
 
-  private:
+   private:
     std::array<std::uint8_t, 0x800> ram{};
 };
 

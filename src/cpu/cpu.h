@@ -23,8 +23,9 @@ struct Status {
 };
 static_assert(sizeof(Status) == 1);
 
-template <Addressable T> class Cpu {
-  public:
+template <Addressable T>
+class Cpu {
+   public:
     std::uint16_t pc{0};
     std::uint8_t a{0};
     std::uint8_t x{0};
@@ -57,7 +58,7 @@ template <Addressable T> class Cpu {
         }
     }
 
-  private:
+   private:
     T &bus;
 
     std::uint16_t effective_addr{0};
@@ -68,7 +69,8 @@ template <Addressable T> class Cpu {
         effective_addr = static_cast<std::uint16_t>(low | high << 8);
     }
 
-    template <bool write> void Abx() {
+    template <bool write>
+    void Abx() {
         std::uint8_t low = bus.Read(pc++);
         const auto overflow = __builtin_add_overflow(low, x, &low);
         const auto high = bus.Read(pc++);
@@ -78,7 +80,8 @@ template <Addressable T> class Cpu {
         effective_addr = (low | (high + overflow) << 8);
     }
 
-    template <bool write> void Aby() {
+    template <bool write>
+    void Aby() {
         std::uint8_t low = bus.Read(pc++);
         const auto overflow = __builtin_add_overflow(low, y, &low);
         const auto high = bus.Read(pc++);
@@ -89,9 +92,7 @@ template <Addressable T> class Cpu {
             static_cast<std::uint16_t>(low | (high + overflow) << 8);
     }
 
-    void Zpg() {
-        effective_addr = bus.Read(pc++);
-    }
+    void Zpg() { effective_addr = bus.Read(pc++); }
 
     void Zpx() {
         effective_addr = bus.Read(pc++);

@@ -1,13 +1,13 @@
+#include "processor.h"
+
+#include <cpu.h>
+#include <doctest/doctest.h>
+
 #include <array>
 #include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <vector>
-
-#include <cpu.h>
-#include <doctest/doctest.h>
-
-#include "processor.h"
 
 namespace {
 

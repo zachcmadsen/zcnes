@@ -1,8 +1,8 @@
-#include <cstdint>
-#include <vector>
-
 #include <fmt/core.h>
 #include <rfl/json/load.hpp>
+
+#include <cstdint>
+#include <vector>
 
 #include "processor.h"
 
