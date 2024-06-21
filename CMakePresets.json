@@ -43,7 +43,7 @@
             "architecture": "x64",
             "cacheVariables": {
                 "CMAKE_CONFIGURATION_TYPES": "Release",
-                "ZCNES_CXX_FLAGS": "/WX /W4"
+                "ZCNES_CXX_FLAGS": "/W4"
             }
         }
     ]
