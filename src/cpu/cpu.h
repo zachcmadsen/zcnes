@@ -7,13 +7,42 @@ namespace zcnes {
 
 namespace num {
 
+namespace detail {
+
+#if defined(__has_builtin)
+#if __has_builtin(__builtin_add_overflow) && \
+    __has_builtin(__builtin_sub_overflow)
+#define ZCNES_HAVE_BUILTIN_OVERFLOW_OPS 1
+#endif
+#endif
+
+#ifdef ZCNES_HAVE_BUILTIN_OVERFLOW_OPS
+inline constexpr bool UseBuiltinOverflowOps = true;
+#else
+inline constexpr bool UseBuiltinOverflowOps = false;
+#endif
+
+#undef ZCNES_HAVE_BUILTIN_OVERFLOW_OPS
+
+}  // namespace detail
+
 inline constexpr std::uint16_t Combine(std::uint8_t high, std::uint8_t low) {
   return static_cast<std::uint16_t>(static_cast<unsigned>(high) << 8 |
                                     static_cast<unsigned>(low));
 }
 
-inline constexpr std::uint8_t WrappingAdd(std::uint8_t a, std::uint8_t b) {
-  return static_cast<std::uint8_t>(a + b);
+inline constexpr std::uint8_t WrappingAdd(std::uint8_t lhs, std::uint8_t rhs) {
+  return static_cast<std::uint8_t>(lhs + rhs);
+}
+
+inline constexpr bool OverflowingAdd(std::uint8_t lhs, std::uint8_t rhs,
+                                     std::uint8_t *res) {
+  if constexpr (detail::UseBuiltinOverflowOps) {
+    return __builtin_add_overflow(lhs, rhs, res);
+  } else {
+    *res = WrappingAdd(lhs, rhs);
+    return *res < lhs;
+  }
 }
 
 }  // namespace num
@@ -85,7 +114,7 @@ class Cpu {
   template <bool write>
   void Abx() {
     auto low = bus.Read(pc++);
-    const auto overflow = __builtin_add_overflow(low, x, &low);
+    const auto overflow = num::OverflowingAdd(low, x, &low);
     const auto high = bus.Read(pc++);
     if (write || overflow) {
       bus.Read(num::Combine(high, low));
@@ -95,8 +124,8 @@ class Cpu {
 
   template <bool write>
   void Aby() {
-    std::uint8_t low = bus.Read(pc++);
-    const auto overflow = __builtin_add_overflow(low, y, &low);
+    auto low = bus.Read(pc++);
+    const auto overflow = num::OverflowingAdd(low, y, &low);
     const auto high = bus.Read(pc++);
     if (write || overflow) {
       bus.Read(num::Combine(high, low));
