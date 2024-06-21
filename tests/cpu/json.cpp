@@ -4,7 +4,7 @@
 #include <fmt/core.h>
 #include <rfl/json/load.hpp>
 
-#include "processor.hpp"
+#include "processor.h"
 
 #ifdef _ZCNES_TESTS_PATH
 #define ZCNES_TESTS_PATH _ZCNES_TESTS_PATH

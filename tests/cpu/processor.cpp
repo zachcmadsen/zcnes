@@ -4,10 +4,10 @@
 #include <cstdint>
 #include <vector>
 
-#include <cpu.hpp>
+#include <cpu.h>
 #include <doctest/doctest.h>
 
-#include "processor.hpp"
+#include "processor.h"
 
 namespace {
 

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <cpu.hpp>
+#include <cpu.h>
 
-#include "bus.hpp"
+#include "bus.h"
 
 namespace zcnes {
 
