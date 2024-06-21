@@ -3,28 +3,16 @@
 #include <concepts>
 #include <cstdint>
 
-namespace zcnes {
-
-namespace num {
-
-namespace detail {
-
 #if defined(__has_builtin)
 #if __has_builtin(__builtin_add_overflow) && \
     __has_builtin(__builtin_sub_overflow)
-#define ZCNES_HAVE_BUILTIN_OVERFLOW_OPS 1
+#define ZCNES_HAVE_OVERFLOW_BUILTINS 1
 #endif
 #endif
 
-#ifdef ZCNES_HAVE_BUILTIN_OVERFLOW_OPS
-inline constexpr bool UseBuiltinOverflowOps = true;
-#else
-inline constexpr bool UseBuiltinOverflowOps = false;
-#endif
+namespace zcnes {
 
-#undef ZCNES_HAVE_BUILTIN_OVERFLOW_OPS
-
-}  // namespace detail
+namespace num {
 
 inline constexpr std::uint16_t Combine(std::uint8_t high, std::uint8_t low) {
   return static_cast<std::uint16_t>(static_cast<unsigned>(high) << 8 |
@@ -37,12 +25,12 @@ inline constexpr std::uint8_t WrappingAdd(std::uint8_t lhs, std::uint8_t rhs) {
 
 inline constexpr bool OverflowingAdd(std::uint8_t lhs, std::uint8_t rhs,
                                      std::uint8_t *res) {
-  if constexpr (detail::UseBuiltinOverflowOps) {
-    return __builtin_add_overflow(lhs, rhs, res);
-  } else {
-    *res = WrappingAdd(lhs, rhs);
-    return *res < lhs;
-  }
+#ifdef ZCNES_HAVE_OVERFLOW_BUILTINS
+  return __builtin_add_overflow(lhs, rhs, res);
+#else
+  *res = WrappingAdd(lhs, rhs);
+  return *res < lhs;
+#endif
 }
 
 }  // namespace num
