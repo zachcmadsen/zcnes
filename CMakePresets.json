@@ -2,27 +2,38 @@
     "version": 3,
     "configurePresets": [
         {
+            "name": "flags-linux",
+            "hidden": true,
+            "cacheVariables": {
+                "ZCNES_CXX_FLAGS": "-Werror -Wall -Wextra -Wconversion -Wsign-conversion -pedantic-errors"
+            }
+        },
+        {
             "name": "dev",
+            "inherits": [
+                "flags-linux"
+            ],
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_C_COMPILER": "clang",
                 "CMAKE_CXX_COMPILER": "clang++",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "ZCNES_CXX_FLAGS": "-Wall -Wextra -Wpedantic -Wconversion -Wcast-align -Wcast-qual -Wshadow -Wnull-dereference -Wold-style-cast"
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
             }
         },
         {
             "name": "ci-linux",
+            "inherits": [
+                "flags-linux"
+            ],
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_C_COMPILER": "clang-17",
                 "CMAKE_CXX_COMPILER": "clang++-17",
-                "CMAKE_CXX_FLAGS": "-fsanitize=address",
-                "ZCNES_CXX_FLAGS": "-Werror -Wall -Wextra -Wconversion -Wsign-conversion -pedantic-errors"
+                "CMAKE_CXX_FLAGS": "-fsanitize=address"
             }
         },
         {
