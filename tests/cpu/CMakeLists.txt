@@ -11,7 +11,7 @@ FetchContent_Declare(
 message(STATUS "Fetching reflect-cpp...")
 FetchContent_MakeAvailable(reflect-cpp)
 
-add_executable(cpu-test json.cpp main.cpp processor.cpp)
+add_executable(cpu-test json.cc main.cc processor.cc)
 
 target_include_directories(cpu-test PRIVATE .)
 
