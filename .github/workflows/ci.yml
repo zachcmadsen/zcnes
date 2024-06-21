@@ -39,20 +39,20 @@ jobs:
       - name: Test
         run: ctest --test-dir build --output-on-failure -j 2
 
-  # windows:
-  #   runs-on: windows-latest
+  windows:
+    runs-on: windows-latest
 
-  #   steps:
-  #     - uses: actions/checkout@v4
+    steps:
+      - uses: actions/checkout@v4
 
-  #     - name: Configure
-  #       run: cmake --preset ci-windows
+      - name: Configure
+        run: cmake --preset ci-windows
 
-  #     - name: Build
-  #       run: cmake --build build --config Release
+      - name: Build
+        run: cmake --build build --config Release
       
-  #     - name: Clone zcnes-tests
-  #       run: git clone https://github.com/zachcmadsen/zcnes-tests.git ../zcnes-tests 
+      - name: Clone zcnes-tests
+        run: git clone https://github.com/zachcmadsen/zcnes-tests.git ../zcnes-tests 
 
-  #     - name: Test
-  #       run: ctest --test-dir build --output-on-failure -j 2
+      - name: Test
+        run: ctest --test-dir build --output-on-failure -j 2
