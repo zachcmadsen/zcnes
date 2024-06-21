@@ -7,14 +7,14 @@
 namespace zcnes {
 
 class Core {
-   public:
-    Core();
+ public:
+  Core();
 
-    void Step();
+  void Step();
 
-   private:
-    Bus bus;
-    Cpu<Bus> cpu;
+ private:
+  Bus bus;
+  Cpu<Bus> cpu;
 };
 
-}
+}  // namespace zcnes
