@@ -37,8 +37,8 @@ struct ProcessorTestBus
 // NOLINTBEGIN(cppcoreguidelines-avoid-do-while,readability-function-cognitive-complexity)
 void run(std::uint8_t opcode)
 {
-    ProcessorTestBus bus;
-    zcnes::Cpu cpu(&bus);
+    ProcessorTestBus bus{};
+    zcnes::Cpu cpu{&bus};
 
     const auto tests = load_tests(opcode);
     for (const auto &test : tests)
