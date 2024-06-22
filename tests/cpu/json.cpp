@@ -12,7 +12,7 @@
 #define ZCNES_TESTS_PATH ""
 #endif
 
-std::vector<ProcessorTest> LoadTests(std::uint8_t opcode)
+std::vector<ProcessorTest> load_tests(std::uint8_t opcode)
 {
     const auto filename = fmt::format("{}/ProcessorTests/{:02x}.json", ZCNES_TESTS_PATH, opcode);
     return rfl::json::load<std::vector<ProcessorTest>>(filename).value();

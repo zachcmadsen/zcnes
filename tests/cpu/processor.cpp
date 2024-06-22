@@ -12,21 +12,21 @@
 namespace
 {
 
-constexpr std::size_t AddrSpaceSize = 0x10000;
+constexpr std::size_t addr_space_size = 0x10000;
 
 struct ProcessorTestBus
 {
-    std::array<std::uint8_t, AddrSpaceSize> ram{};
+    std::array<std::uint8_t, addr_space_size> ram{};
     std::vector<BusState> cycles{};
 
-    std::uint8_t Read(std::uint16_t addr)
+    std::uint8_t read(std::uint16_t addr)
     {
         const auto data = ram[addr];
         cycles.emplace_back(addr, data, "read");
         return data;
     }
 
-    void Write(std::uint16_t addr, std::uint8_t data)
+    void write(std::uint16_t addr, std::uint8_t data)
     {
         cycles.emplace_back(addr, data, "write");
         ram[addr] = data;
@@ -38,7 +38,7 @@ void Run(std::uint8_t opcode)
     ProcessorTestBus bus;
     zcnes::Cpu cpu(bus);
 
-    const auto tests = LoadTests(opcode);
+    const auto tests = load_tests(opcode);
     for (const auto &test : tests)
     {
         cpu.pc = test.initial.pc;
@@ -53,7 +53,7 @@ void Run(std::uint8_t opcode)
         }
         bus.cycles.clear();
 
-        cpu.Step();
+        cpu.step();
 
         REQUIRE(cpu.pc == test.final.pc);
         REQUIRE(cpu.s == test.final.s);

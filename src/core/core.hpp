@@ -12,7 +12,7 @@ class Core
   public:
     Core();
 
-    void Step();
+    void step();
 
   private:
     Bus bus;

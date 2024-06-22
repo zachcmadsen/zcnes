@@ -27,4 +27,4 @@ struct ProcessorTest
     std::vector<BusState> cycles;
 };
 
-std::vector<ProcessorTest> LoadTests(std::uint8_t opcode);
+std::vector<ProcessorTest> load_tests(std::uint8_t opcode);

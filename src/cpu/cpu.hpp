@@ -15,22 +15,22 @@ namespace zcnes
 namespace num
 {
 
-inline constexpr std::uint16_t Combine(std::uint8_t high, std::uint8_t low)
+inline constexpr std::uint16_t combine(std::uint8_t high, std::uint8_t low)
 {
     return static_cast<std::uint16_t>(static_cast<unsigned>(high) << 8 | static_cast<unsigned>(low));
 }
 
-inline constexpr std::uint8_t WrappingAdd(std::uint8_t lhs, std::uint8_t rhs)
+inline constexpr std::uint8_t wrapping_add(std::uint8_t lhs, std::uint8_t rhs)
 {
     return static_cast<std::uint8_t>(lhs + rhs);
 }
 
-inline constexpr bool OverflowingAdd(std::uint8_t lhs, std::uint8_t rhs, std::uint8_t *res)
+inline constexpr bool overflowing_add(std::uint8_t lhs, std::uint8_t rhs, std::uint8_t *res)
 {
 #ifdef ZCNES_HAVE_OVERFLOW_BUILTINS
     return __builtin_add_overflow(lhs, rhs, res);
 #else
-    *res = WrappingAdd(lhs, rhs);
+    *res = wrapping_add(lhs, rhs);
     return *res < lhs;
 #endif
 }
@@ -40,10 +40,10 @@ inline constexpr bool OverflowingAdd(std::uint8_t lhs, std::uint8_t rhs, std::ui
 template <typename T>
 concept Addressable = requires(T t, std::uint16_t addr, std::uint8_t data) {
     {
-        t.Read(addr)
+        t.read(addr)
     } -> std::same_as<std::uint8_t>;
     {
-        t.Write(addr, data)
+        t.write(addr, data)
     } -> std::same_as<void>;
 };
 
@@ -72,38 +72,38 @@ template <Addressable T> class Cpu
 
     explicit Cpu(T &bus) : bus{bus} {};
 
-    void Step()
+    void step()
     {
-        const auto opcode = bus.Read(pc++);
+        const auto opcode = bus.read(pc++);
         if (opcode == 0xA5)
         {
-            Zpg();
-            Lda();
+            zpg();
+            lda();
         }
         else if (opcode == 0xAD)
         {
-            Abs();
-            Lda();
+            abs();
+            lda();
         }
         else if (opcode == 0xB5)
         {
-            Zpx();
-            Lda();
+            zpx();
+            lda();
         }
         else if (opcode == 0xB6)
         {
-            Zpy();
-            Ldx();
+            zpy();
+            ldx();
         }
         else if (opcode == 0xBD)
         {
-            Abx<false>();
-            Lda();
+            abx<false>();
+            lda();
         }
         else if (opcode == 0xB9)
         {
-            Aby<false>();
-            Lda();
+            aby<false>();
+            lda();
         }
     }
 
@@ -112,66 +112,66 @@ template <Addressable T> class Cpu
 
     std::uint16_t effective_addr{0};
 
-    void Abs()
+    void abs()
     {
-        const auto low = bus.Read(pc++);
-        const auto high = bus.Read(pc++);
-        effective_addr = num::Combine(high, low);
+        const auto low = bus.read(pc++);
+        const auto high = bus.read(pc++);
+        effective_addr = num::combine(high, low);
     }
 
-    template <bool write> void Abx()
+    template <bool write> void abx()
     {
-        auto low = bus.Read(pc++);
-        const auto overflow = num::OverflowingAdd(low, x, &low);
-        const auto high = bus.Read(pc++);
+        auto low = bus.read(pc++);
+        const auto overflow = num::overflowing_add(low, x, &low);
+        const auto high = bus.read(pc++);
         if (write || overflow)
         {
-            bus.Read(num::Combine(high, low));
+            bus.read(num::combine(high, low));
         }
-        effective_addr = num::Combine(high + overflow, low);
+        effective_addr = num::combine(high + overflow, low);
     }
 
-    template <bool write> void Aby()
+    template <bool write> void aby()
     {
-        auto low = bus.Read(pc++);
-        const auto overflow = num::OverflowingAdd(low, y, &low);
-        const auto high = bus.Read(pc++);
+        auto low = bus.read(pc++);
+        const auto overflow = num::overflowing_add(low, y, &low);
+        const auto high = bus.read(pc++);
         if (write || overflow)
         {
-            bus.Read(num::Combine(high, low));
+            bus.read(num::combine(high, low));
         }
-        effective_addr = num::Combine(high + overflow, low);
+        effective_addr = num::combine(high + overflow, low);
     }
 
-    void Zpg()
+    void zpg()
     {
-        effective_addr = bus.Read(pc++);
+        effective_addr = bus.read(pc++);
     }
 
-    void Zpx()
+    void zpx()
     {
-        auto addr = bus.Read(pc++);
-        bus.Read(addr);
-        effective_addr = num::WrappingAdd(addr, x);
+        auto addr = bus.read(pc++);
+        bus.read(addr);
+        effective_addr = num::wrapping_add(addr, x);
     }
 
-    void Zpy()
+    void zpy()
     {
-        auto addr = bus.Read(pc++);
-        bus.Read(addr);
-        effective_addr = num::WrappingAdd(addr, y);
+        auto addr = bus.read(pc++);
+        bus.read(addr);
+        effective_addr = num::wrapping_add(addr, y);
     }
 
-    void Lda()
+    void lda()
     {
-        a = bus.Read(effective_addr);
+        a = bus.read(effective_addr);
         p.z = a == 0;
         p.n = a & 0x80;
     }
 
-    void Ldx()
+    void ldx()
     {
-        x = bus.Read(effective_addr);
+        x = bus.read(effective_addr);
         p.z = x == 0;
         p.n = x & 0x80;
     }
