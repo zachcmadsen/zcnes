@@ -15,7 +15,7 @@ class Core
     void step();
 
   private:
-    Bus bus;
+    Bus bus{};
     Cpu<Bus> cpu;
 };
 
