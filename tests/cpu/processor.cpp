@@ -48,7 +48,7 @@ void run(std::uint8_t opcode)
         cpu.a = test.initial.a;
         cpu.x = test.initial.x;
         cpu.y = test.initial.y;
-        cpu.p = std::bit_cast<zcnes::Status>(test.initial.p);
+        cpu.p = std::bit_cast<zcnes::Cpu<ProcessorTestBus>::Status>(test.initial.p);
         for (const auto &[addr, data] : test.initial.ram)
         {
             bus.ram.at(addr) = data;

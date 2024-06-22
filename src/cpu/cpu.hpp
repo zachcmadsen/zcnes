@@ -4,8 +4,8 @@
 #include <cstdint>
 
 #if defined(__has_builtin)
-#if __has_builtin(__builtin_add_overflow) && __has_builtin(__builtin_sub_overflow)
-#define ZCNES_HAVE_OVERFLOW_BUILTINS 1
+#if __has_builtin(__builtin_add_overflow)
+#define ZCNES_USE_OVERFLOW_BUILTIN 1
 #endif
 #endif
 
@@ -15,19 +15,25 @@ namespace zcnes
 namespace num
 {
 
+/// Combines `high` and `low` into a 16-bit integer.
+///
+/// The implementation is copied from https://stackoverflow.com/a/57320436.
 inline constexpr std::uint16_t combine(std::uint8_t high, std::uint8_t low)
 {
     return static_cast<std::uint16_t>(static_cast<unsigned>(high) << 8 | static_cast<unsigned>(low));
 }
 
+/// Computes `lhs` + `rhs`, wrapping at the max value of `std::uint8_t`.
 inline constexpr std::uint8_t wrapping_add(std::uint8_t lhs, std::uint8_t rhs)
 {
     return lhs + rhs;
 }
 
+/// Computes `lhs` + `rhs` and returns a boolean indicating whether overflow
+/// occurred.
 inline constexpr bool overflowing_add(std::uint8_t lhs, std::uint8_t rhs, std::uint8_t *res)
 {
-#ifdef ZCNES_HAVE_OVERFLOW_BUILTINS
+#ifdef ZCNES_USE_OVERFLOW_BUILTIN
     return __builtin_add_overflow(lhs, rhs, res);
 #else
     *res = wrapping_add(lhs, rhs);
@@ -37,6 +43,7 @@ inline constexpr bool overflowing_add(std::uint8_t lhs, std::uint8_t rhs, std::u
 
 } // namespace num
 
+/// A type that can be addressed to read and write bytes.
 template <typename T>
 concept Addressable = requires(T t, std::uint16_t addr, std::uint8_t data) {
     {
@@ -47,24 +54,13 @@ concept Addressable = requires(T t, std::uint16_t addr, std::uint8_t data) {
     } -> std::same_as<void>;
 };
 
-struct Status
-{
-    bool c : 1;
-    bool z : 1;
-    bool i : 1;
-    bool d : 1;
-    bool b : 1;
-    bool u : 1;
-    bool v : 1;
-    bool n : 1;
-};
-static_assert(sizeof(Status) == 1);
-
+/// A Ricoh 6502 emulator.
 template <Addressable T> class Cpu
 {
   public:
     explicit Cpu(T *bus) : bus{bus} {};
 
+    /// Executes the next instruction.
     void step()
     {
         const auto opcode = bus->read(pc++);
@@ -101,10 +97,23 @@ template <Addressable T> class Cpu
     }
 
   private:
-// Make register members public for processor tests.
+// Register members need to be public for processor tests.
 #ifdef ZCNES_PROCESSOR_TESTS
   public:
 #endif
+    struct Status
+    {
+        bool c : 1;
+        bool z : 1;
+        bool i : 1;
+        bool d : 1;
+        bool b : 1;
+        bool u : 1;
+        bool v : 1;
+        bool n : 1;
+    };
+    static_assert(sizeof(Status) == 1);
+
     std::uint16_t pc{0};
     std::uint8_t a{0};
     std::uint8_t x{0};
