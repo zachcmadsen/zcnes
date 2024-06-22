@@ -4,17 +4,19 @@
 
 #include "bus.h"
 
-namespace zcnes {
+namespace zcnes
+{
 
-class Core {
- public:
-  Core();
+class Core
+{
+  public:
+    Core();
 
-  void Step();
+    void Step();
 
- private:
-  Bus bus;
-  Cpu<Bus> cpu;
+  private:
+    Bus bus;
+    Cpu<Bus> cpu;
 };
 
-}  // namespace zcnes
+} // namespace zcnes

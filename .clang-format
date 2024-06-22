@@ -1,3 +1,2 @@
-BasedOnStyle: Google
+BasedOnStyle: Microsoft
 InsertNewlineAtEOF: true
-SortIncludes: false

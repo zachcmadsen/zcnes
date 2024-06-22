@@ -1,9 +1,15 @@
 #include "core.h"
 
-namespace zcnes {
+namespace zcnes
+{
 
-Core::Core() : cpu(bus) {}
+Core::Core() : cpu(bus)
+{
+}
 
-void Core::Step() { cpu.Step(); }
+void Core::Step()
+{
+    cpu.Step();
+}
 
-}  // namespace zcnes
+} // namespace zcnes
