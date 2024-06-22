@@ -1,6 +1,6 @@
 include(${PROJECT_SOURCE_DIR}/cmake/zcnes.cmake)
 
-add_library(core core.cc)
+add_library(core core.cpp)
 
 target_include_directories(core PRIVATE .)
 

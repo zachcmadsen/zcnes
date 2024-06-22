@@ -4,10 +4,10 @@
 #include <cstdint>
 #include <vector>
 
-#include <cpu.h>
+#include <cpu.hpp>
 #include <doctest/doctest.h>
 
-#include "json.h"
+#include "json.hpp"
 
 namespace
 {
