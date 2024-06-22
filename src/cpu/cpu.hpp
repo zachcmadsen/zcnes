@@ -22,7 +22,7 @@ inline constexpr std::uint16_t combine(std::uint8_t high, std::uint8_t low)
 
 inline constexpr std::uint8_t wrapping_add(std::uint8_t lhs, std::uint8_t rhs)
 {
-    return static_cast<std::uint8_t>(lhs + rhs);
+    return lhs + rhs;
 }
 
 inline constexpr bool overflowing_add(std::uint8_t lhs, std::uint8_t rhs, std::uint8_t *res)
