@@ -135,6 +135,12 @@ template <Addressable T> class Cpu
         return data;
     }
 
+    void set_z_and_n(std::uint8_t data)
+    {
+        p.z = data == 0;
+        p.n = (data & 0x80) != 0;
+    }
+
     void abs()
     {
         const auto low = next_byte();
@@ -188,15 +194,13 @@ template <Addressable T> class Cpu
     void lda()
     {
         a = bus->read_byte(addr);
-        p.z = a == 0;
-        p.n = (a & 0x80) != 0;
+        set_z_and_n(a);
     }
 
     void ldx()
     {
         x = bus->read_byte(addr);
-        p.z = x == 0;
-        p.n = (x & 0x80) != 0;
+        set_z_and_n(x);
     }
 };
 
