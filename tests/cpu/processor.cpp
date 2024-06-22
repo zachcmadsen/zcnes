@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <vector>
 
+#define ZCNES_PROCESSOR_TESTS
 #include <cpu.hpp>
 #include <doctest/doctest.h>
 
@@ -21,7 +22,7 @@ struct ProcessorTestBus
 
     std::uint8_t read(std::uint16_t addr)
     {
-        const auto data = ram[addr];
+        const auto data = ram.at(addr);
         cycles.emplace_back(addr, data, "read");
         return data;
     }
@@ -29,14 +30,15 @@ struct ProcessorTestBus
     void write(std::uint16_t addr, std::uint8_t data)
     {
         cycles.emplace_back(addr, data, "write");
-        ram[addr] = data;
+        ram.at(addr) = data;
     }
 };
 
-void Run(std::uint8_t opcode)
+// NOLINTBEGIN(cppcoreguidelines-avoid-do-while,readability-function-cognitive-complexity)
+void run(std::uint8_t opcode)
 {
     ProcessorTestBus bus;
-    zcnes::Cpu cpu(bus);
+    zcnes::Cpu cpu(&bus);
 
     const auto tests = load_tests(opcode);
     for (const auto &test : tests)
@@ -49,7 +51,7 @@ void Run(std::uint8_t opcode)
         cpu.p = std::bit_cast<zcnes::Status>(test.initial.p);
         for (const auto &[addr, data] : test.initial.ram)
         {
-            bus.ram[addr] = data;
+            bus.ram.at(addr) = data;
         }
         bus.cycles.clear();
 
@@ -63,19 +65,20 @@ void Run(std::uint8_t opcode)
         REQUIRE(std::bit_cast<std::uint8_t>(cpu.p) == test.final.p);
         for (const auto &[addr, data] : test.final.ram)
         {
-            REQUIRE(bus.ram[addr] == data);
+            REQUIRE(bus.ram.at(addr) == data);
         }
         REQUIRE(bus.cycles == test.cycles);
     }
 }
+// NOLINTEND(cppcoreguidelines-avoid-do-while,readability-function-cognitive-complexity)
 
 // clang-format off
-TEST_CASE("ProcessorTests.A5") { Run(0xA5); }
-TEST_CASE("ProcessorTests.AD") { Run(0xAD); }
-TEST_CASE("ProcessorTests.B5") { Run(0xB5); }
-TEST_CASE("ProcessorTests.B6") { Run(0xB6); }
-TEST_CASE("ProcessorTests.B9") { Run(0xB9); }
-TEST_CASE("ProcessorTests.BD") { Run(0xBD); }
+TEST_CASE("ProcessorTests.A5") { run(0xA5); }
+TEST_CASE("ProcessorTests.AD") { run(0xAD); }
+TEST_CASE("ProcessorTests.B5") { run(0xB5); }
+TEST_CASE("ProcessorTests.B6") { run(0xB6); }
+TEST_CASE("ProcessorTests.B9") { run(0xB9); }
+TEST_CASE("ProcessorTests.BD") { run(0xBD); }
 // clang-format on
 
 } // namespace

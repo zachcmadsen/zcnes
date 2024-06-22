@@ -1,3 +1,18 @@
-Checks: 'bugprone-*,clang-analyzer-*,misc-*,modernize-*,performance-*,readability-*,-misc-include-cleaner,-misc-non-private-member-variables-in-classes,-modernize-use-trailing-return-type,-readability-function-cognitive-complexity,-readability-identifier-length,-readability-implicit-bool-conversion,-readability-magic-numbers'
+Checks: >
+  -*,
+  bugprone-*,
+  cppcoreguidelines-*,
+  google-*,
+  misc-*,
+  modernize-*,
+  performance-*,
+  readability-*,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -modernize-use-trailing-return-type,
+  -readability-identifier-length,
+  -readability-magic-numbers,
 HeaderFileExtensions: ['hpp']
 ImplementationFileExtensions: ['cpp']
+CheckOptions:
+  - key: misc-non-private-member-variables-in-classes.IgnorePublicMemberVariables
+    value: true

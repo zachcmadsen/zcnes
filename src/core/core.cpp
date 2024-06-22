@@ -3,7 +3,7 @@
 namespace zcnes
 {
 
-Core::Core() : cpu(bus)
+Core::Core() : cpu(&bus)
 {
 }
 

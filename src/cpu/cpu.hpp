@@ -63,18 +63,11 @@ static_assert(sizeof(Status) == 1);
 template <Addressable T> class Cpu
 {
   public:
-    std::uint16_t pc{0};
-    std::uint8_t a{0};
-    std::uint8_t x{0};
-    std::uint8_t y{0};
-    std::uint8_t s{0xFD};
-    Status p{false, false, true, false, false, true, false, false};
-
-    explicit Cpu(T &bus) : bus{bus} {};
+    explicit Cpu(T *bus) : bus{bus} {};
 
     void step()
     {
-        const auto opcode = bus.read(pc++);
+        const auto opcode = bus->read(pc++);
         if (opcode == 0xA5)
         {
             zpg();
@@ -108,72 +101,86 @@ template <Addressable T> class Cpu
     }
 
   private:
-    T &bus;
+// Make register members public for processor tests.
+#ifdef ZCNES_PROCESSOR_TESTS
+  public:
+#endif
+    std::uint16_t pc{0};
+    std::uint8_t a{0};
+    std::uint8_t x{0};
+    std::uint8_t y{0};
+    std::uint8_t s{0xFD};
+    Status p{false, false, true, false, false, true, false, false};
+#ifdef ZCNES_PROCESSOR_TESTS
+  private:
+#endif
+
+    T *bus;
 
     std::uint16_t effective_addr{0};
 
     void abs()
     {
-        const auto low = bus.read(pc++);
-        const auto high = bus.read(pc++);
+        const auto low = bus->read(pc++);
+        const auto high = bus->read(pc++);
         effective_addr = num::combine(high, low);
     }
 
     template <bool write> void abx()
     {
-        auto low = bus.read(pc++);
+        auto low = bus->read(pc++);
         const auto overflow = num::overflowing_add(low, x, &low);
-        const auto high = bus.read(pc++);
+        const auto high = bus->read(pc++);
         if (write || overflow)
         {
-            bus.read(num::combine(high, low));
+            bus->read(num::combine(high, low));
         }
         effective_addr = num::combine(high + overflow, low);
     }
 
     template <bool write> void aby()
     {
-        auto low = bus.read(pc++);
+        auto low = bus->read(pc++);
         const auto overflow = num::overflowing_add(low, y, &low);
-        const auto high = bus.read(pc++);
+        const auto high = bus->read(pc++);
         if (write || overflow)
         {
-            bus.read(num::combine(high, low));
+            bus->read(num::combine(high, low));
         }
         effective_addr = num::combine(high + overflow, low);
     }
 
     void zpg()
     {
-        effective_addr = bus.read(pc++);
+        effective_addr = bus->read(pc++);
     }
 
     void zpx()
     {
-        auto addr = bus.read(pc++);
-        bus.read(addr);
+        auto addr = bus->read(pc++);
+        bus->read(addr);
         effective_addr = num::wrapping_add(addr, x);
     }
 
     void zpy()
     {
-        auto addr = bus.read(pc++);
-        bus.read(addr);
+        auto addr = bus->read(pc++);
+        bus->read(addr);
         effective_addr = num::wrapping_add(addr, y);
     }
 
     void lda()
     {
-        a = bus.read(effective_addr);
+        a = bus->read(effective_addr);
         p.z = a == 0;
-        p.n = a & 0x80;
+        p.n = (a & 0x80) != 0;
     }
 
     void ldx()
     {
-        x = bus.read(effective_addr);
+        x = bus->read(effective_addr);
         p.z = x == 0;
-        p.n = x & 0x80;
+        p.n = (x & 0x80) != 0;
     }
 };
 
