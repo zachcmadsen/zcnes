@@ -47,10 +47,10 @@ inline constexpr bool overflowing_add(std::uint8_t lhs, std::uint8_t rhs, std::u
 template <typename T>
 concept Addressable = requires(T t, std::uint16_t addr, std::uint8_t data) {
     {
-        t.read(addr)
+        t.read_byte(addr)
     } -> std::same_as<std::uint8_t>;
     {
-        t.write(addr, data)
+        t.write_byte(addr, data)
     } -> std::same_as<void>;
 };
 
@@ -63,7 +63,7 @@ template <Addressable T> class Cpu
     /// Executes the next instruction.
     void step()
     {
-        const auto opcode = bus->read(pc++);
+        const auto opcode = next_byte();
         if (opcode == 0xA5)
         {
             zpg();
@@ -126,68 +126,75 @@ template <Addressable T> class Cpu
 
     T *bus;
 
-    std::uint16_t effective_addr{0};
+    std::uint16_t addr{0};
+
+    std::uint8_t next_byte()
+    {
+        const auto data = bus->read_byte(pc);
+        pc += 1;
+        return data;
+    }
 
     void abs()
     {
-        const auto low = bus->read(pc++);
-        const auto high = bus->read(pc++);
-        effective_addr = num::combine(high, low);
+        const auto low = next_byte();
+        const auto high = next_byte();
+        addr = num::combine(high, low);
     }
 
     template <bool write> void abx()
     {
-        auto low = bus->read(pc++);
+        auto low = next_byte();
         const auto overflow = num::overflowing_add(low, x, &low);
-        const auto high = bus->read(pc++);
+        const auto high = next_byte();
         if (write || overflow)
         {
-            bus->read(num::combine(high, low));
+            bus->read_byte(num::combine(high, low));
         }
-        effective_addr = num::combine(high + overflow, low);
+        addr = num::combine(high + overflow, low);
     }
 
     template <bool write> void aby()
     {
-        auto low = bus->read(pc++);
+        auto low = next_byte();
         const auto overflow = num::overflowing_add(low, y, &low);
-        const auto high = bus->read(pc++);
+        const auto high = next_byte();
         if (write || overflow)
         {
-            bus->read(num::combine(high, low));
+            bus->read_byte(num::combine(high, low));
         }
-        effective_addr = num::combine(high + overflow, low);
+        addr = num::combine(high + overflow, low);
     }
 
     void zpg()
     {
-        effective_addr = bus->read(pc++);
+        addr = next_byte();
     }
 
     void zpx()
     {
-        auto addr = bus->read(pc++);
-        bus->read(addr);
-        effective_addr = num::wrapping_add(addr, x);
+        const auto addr = next_byte();
+        bus->read_byte(addr);
+        this->addr = num::wrapping_add(addr, x);
     }
 
     void zpy()
     {
-        auto addr = bus->read(pc++);
-        bus->read(addr);
-        effective_addr = num::wrapping_add(addr, y);
+        const auto addr = next_byte();
+        bus->read_byte(addr);
+        this->addr = num::wrapping_add(addr, y);
     }
 
     void lda()
     {
-        a = bus->read(effective_addr);
+        a = bus->read_byte(addr);
         p.z = a == 0;
         p.n = (a & 0x80) != 0;
     }
 
     void ldx()
     {
-        x = bus->read(effective_addr);
+        x = bus->read_byte(addr);
         p.z = x == 0;
         p.n = (x & 0x80) != 0;
     }

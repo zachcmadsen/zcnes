@@ -20,14 +20,14 @@ struct ProcessorTestBus
     std::array<std::uint8_t, addr_space_size> ram{};
     std::vector<BusState> cycles{};
 
-    std::uint8_t read(std::uint16_t addr)
+    std::uint8_t read_byte(std::uint16_t addr)
     {
         const auto data = ram.at(addr);
         cycles.emplace_back(addr, data, "read");
         return data;
     }
 
-    void write(std::uint16_t addr, std::uint8_t data)
+    void write_byte(std::uint16_t addr, std::uint8_t data)
     {
         cycles.emplace_back(addr, data, "write");
         ram.at(addr) = data;
