@@ -375,7 +375,7 @@ template <Addressable T> class Cpu
 
     void asl_a()
     {
-        bus->read_byte(addr);
+        bus->read_byte(pc);
         const auto carry = bit::msb(a);
         a <<= 1;
         p.c = carry;
