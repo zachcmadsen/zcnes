@@ -141,22 +141,47 @@ template <Addressable T> class Cpu
 
     void idx()
     {
+        auto ptr = next_byte();
+        bus->read_byte(ptr);
+        ptr += x;
+        const auto low = bus->read_byte(ptr);
+        ptr += 1;
+        const auto high = bus->read_byte(ptr);
+        addr = num::combine(high, low);
     }
 
     template <bool write> void idy()
     {
+        auto ptr = next_byte();
+        auto low = bus->read_byte(ptr);
+        ptr += 1;
+        const auto high = bus->read_byte(ptr);
+        const auto overflow = num::overflowing_add(low, y, &low);
+        if (write || overflow)
+        {
+            bus->read_byte(num::combine(high, low));
+        }
+        addr = num::combine(high + overflow, low);
     }
 
     void imm()
     {
+        addr = pc;
+        pc += 1;
     }
 
     void imp()
     {
+        addr = pc;
     }
 
     void ind()
     {
+        const auto ptr_low = next_byte();
+        const auto ptr_high = next_byte();
+        const auto low = bus->read_byte(num::combine(ptr_high, ptr_low));
+        const auto high = bus->read_byte(num::combine(ptr_high, ptr_low + 1));
+        addr = num::combine(high, low);
     }
 
     void zpg()
@@ -319,6 +344,7 @@ template <Addressable T> class Cpu
 
     void jmp()
     {
+        pc = addr;
     }
 
     void jsr()
@@ -365,6 +391,7 @@ template <Addressable T> class Cpu
 
     void nop()
     {
+        bus->read_byte(addr);
     }
 
     void ora()
