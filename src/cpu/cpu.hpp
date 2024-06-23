@@ -180,6 +180,14 @@ template <Addressable T> class Cpu
         }
     }
 
+    void compare(std::uint8_t lhs, std::uint8_t rhs)
+    {
+        std::uint8_t res = 0;
+        const auto overflow = num::overflowing_sub(lhs, rhs, &res);
+        p.c = !overflow;
+        set_z_and_n(res);
+    }
+
     void push(std::uint8_t data)
     {
         bus->write_byte(stack_addr + s, data);
@@ -442,18 +450,29 @@ template <Addressable T> class Cpu
 
     void cmp()
     {
+        const auto data = bus->read_byte(addr);
+        compare(a, data);
     }
 
     void cpx()
     {
+        const auto data = bus->read_byte(addr);
+        compare(x, data);
     }
 
     void cpy()
     {
+        const auto data = bus->read_byte(addr);
+        compare(y, data);
     }
 
     void dcp()
     {
+        auto data = bus->read_byte(addr);
+        bus->write_byte(addr, data);
+        data -= 1;
+        bus->write_byte(addr, data);
+        compare(a, data);
     }
 
     void dec()
