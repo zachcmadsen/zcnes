@@ -170,6 +170,7 @@ template <Addressable T> class Cpu
         pc += 1;
     }
 
+    // This is only meant to be used with `nop`.
     void imp()
     {
         addr = pc;
@@ -217,6 +218,8 @@ template <Addressable T> class Cpu
 
     void and_()
     {
+        a &= bus->read_byte(addr);
+        set_z_and_n(a);
     }
 
     void ane()
@@ -276,18 +279,26 @@ template <Addressable T> class Cpu
 
     void clc()
     {
+        bus->read_byte(pc);
+        p.c = false;
     }
 
     void cld()
     {
+        bus->read_byte(pc);
+        p.d = false;
     }
 
     void cli()
     {
+        bus->read_byte(pc);
+        p.i = false;
     }
 
     void clv()
     {
+        bus->read_byte(pc);
+        p.v = false;
     }
 
     void cmp()
@@ -320,6 +331,8 @@ template <Addressable T> class Cpu
 
     void eor()
     {
+        a ^= bus->read_byte(addr);
+        set_z_and_n(a);
     }
 
     void inc()
@@ -353,10 +366,17 @@ template <Addressable T> class Cpu
 
     void las()
     {
+        a = bus->read_byte(addr) & s;
+        x = a;
+        s = a;
+        set_z_and_n(a);
     }
 
     void lax()
     {
+        a = bus->read_byte(addr);
+        x = a;
+        set_z_and_n(a);
     }
 
     void lda()
@@ -396,6 +416,8 @@ template <Addressable T> class Cpu
 
     void ora()
     {
+        a |= bus->read_byte(addr);
+        set_z_and_n(a);
     }
 
     void pha()
@@ -448,6 +470,7 @@ template <Addressable T> class Cpu
 
     void sax()
     {
+        bus->write_byte(addr, a & x);
     }
 
     void sbc()
@@ -460,14 +483,20 @@ template <Addressable T> class Cpu
 
     void sec()
     {
+        bus->read_byte(pc);
+        p.c = true;
     }
 
     void sed()
     {
+        bus->read_byte(pc);
+        p.d = true;
     }
 
     void sei()
     {
+        bus->read_byte(pc);
+        p.i = true;
     }
 
     void sha()
@@ -492,14 +521,17 @@ template <Addressable T> class Cpu
 
     void sta()
     {
+        bus->write_byte(addr, a);
     }
 
     void stx()
     {
+        bus->write_byte(addr, x);
     }
 
     void sty()
     {
+        bus->write_byte(addr, y);
     }
 
     void tas()
@@ -508,26 +540,43 @@ template <Addressable T> class Cpu
 
     void tax()
     {
+        bus->read_byte(pc);
+        x = a;
+        set_z_and_n(x);
     }
 
     void tay()
     {
+        bus->read_byte(pc);
+        y = a;
+        set_z_and_n(y);
     }
 
     void tsx()
     {
+        bus->read_byte(pc);
+        x = s;
+        set_z_and_n(x);
     }
 
     void txa()
     {
+        bus->read_byte(pc);
+        a = x;
+        set_z_and_n(a);
     }
 
     void txs()
     {
+        bus->read_byte(pc);
+        s = x;
     }
 
     void tya()
     {
+        bus->read_byte(pc);
+        a = y;
+        set_z_and_n(a);
     }
 };
 
