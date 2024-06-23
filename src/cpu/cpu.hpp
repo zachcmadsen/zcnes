@@ -137,6 +137,8 @@ template <Addressable T> class Cpu
     T *bus;
 
     std::uint16_t addr{0};
+    // Track page boundary crossings for SHA, SHX, SHY, and SHS instructions.
+    bool page_cross{false};
 
     std::uint8_t next_byte()
     {
@@ -149,6 +151,23 @@ template <Addressable T> class Cpu
     {
         p.z = data == 0;
         p.n = bit::msb(data);
+    }
+
+    void push(std::uint8_t data)
+    {
+        bus->write_byte(stack_addr + s, data);
+        s -= 1;
+    }
+
+    std::uint8_t pop()
+    {
+        s += 1;
+        return bus->read_byte(stack_addr + s);
+    }
+
+    std::uint8_t peek()
+    {
+        return bus->read_byte(stack_addr + s);
     }
 
     void add(std::uint8_t data)
@@ -188,21 +207,18 @@ template <Addressable T> class Cpu
         set_z_and_n(res);
     }
 
-    void push(std::uint8_t data)
+    /// A helper function for SHA, SHX, SHY, AND SHS.
+    ///
+    /// See https://github.com/SingleStepTests/ProcessorTests/issues/61 for
+    /// how the instructions work.
+    void sh(std::uint8_t data)
     {
-        bus->write_byte(stack_addr + s, data);
-        s -= 1;
-    }
-
-    std::uint8_t pop()
-    {
-        s += 1;
-        return bus->read_byte(stack_addr + s);
-    }
-
-    std::uint8_t peek()
-    {
-        return bus->read_byte(stack_addr + s);
+        // TODO(zachcmadsen): Write this better?
+        const auto low = static_cast<std::uint8_t>(addr);
+        std::uint8_t high = addr >> 8;
+        data &= high + static_cast<std::uint8_t>(!page_cross);
+        high = page_cross ? data : high;
+        bus->write_byte(num::combine(high, low), data);
     }
 
     void abs()
@@ -222,6 +238,7 @@ template <Addressable T> class Cpu
             bus->read_byte(num::combine(high, low));
         }
         addr = num::combine(high + overflow, low);
+        page_cross = overflow;
     }
 
     template <bool write> void aby()
@@ -234,6 +251,7 @@ template <Addressable T> class Cpu
             bus->read_byte(num::combine(high, low));
         }
         addr = num::combine(high + overflow, low);
+        page_cross = overflow;
     }
 
     void idx()
@@ -259,6 +277,7 @@ template <Addressable T> class Cpu
             bus->read_byte(num::combine(high, low));
         }
         addr = num::combine(high + overflow, low);
+        page_cross = overflow;
     }
 
     void imm()
@@ -785,14 +804,17 @@ template <Addressable T> class Cpu
 
     void sha()
     {
+        sh(a & x);
     }
 
     void shx()
     {
+        sh(x);
     }
 
     void shy()
     {
+        sh(y);
     }
 
     void slo()
@@ -834,8 +856,10 @@ template <Addressable T> class Cpu
         bus->write_byte(addr, y);
     }
 
-    void tas()
+    void shs()
     {
+        s = a & x;
+        sh(s);
     }
 
     void tax()
@@ -1035,7 +1059,7 @@ template <Addressable T> inline void Cpu<T>::step()
     case 0x98:               tya();   break;
     case 0x99: aby<write>(); sta();   break;
     case 0x9A:               txs();   break;
-    case 0x9B: aby<write>(); tas();   break;
+    case 0x9B: aby<write>(); shs();   break;
     case 0x9C: abx<write>(); shy();   break;
     case 0x9D: abx<write>(); sta();   break;
     case 0x9E: aby<write>(); shx();   break;
