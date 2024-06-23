@@ -108,6 +108,16 @@ template <Addressable T> class Cpu
         p.n = (data & 0x80) != 0;
     }
 
+    void add(std::uint8_t data)
+    {
+        const auto prev_a = a;
+        std::uint8_t carry = 0;
+        a = __builtin_addcb(a, data, p.c, &carry);
+        p.c = carry;
+        p.v = (prev_a ^ a) & (data ^ a) & 0x80;
+        set_z_and_n(a);
+    }
+
     void branch(bool cond)
     {
         const auto offset = next_byte();
@@ -225,6 +235,8 @@ template <Addressable T> class Cpu
 
     void adc()
     {
+        const auto data = bus->read_byte(addr);
+        add(data);
     }
 
     void alr()
