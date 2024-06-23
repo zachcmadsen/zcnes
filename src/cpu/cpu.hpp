@@ -626,22 +626,59 @@ template <Addressable T> class Cpu
 
     void rla()
     {
+        auto data = bus->read_byte(addr);
+        bus->write_byte(addr, data);
+        const auto carry = bit::msb(data);
+        data <<= 1;
+        data |= p.c;
+        bus->write_byte(addr, data);
+        a &= data;
+        p.c = carry;
+        set_z_and_n(a);
     }
 
     void rol()
     {
+        auto data = bus->read_byte(addr);
+        bus->write_byte(addr, data);
+        const auto carry = bit::msb(data);
+        data <<= 1;
+        data |= p.c;
+        bus->write_byte(addr, data);
+        p.c = carry;
+        set_z_and_n(data);
     }
 
     void rol_a()
     {
+        bus->read_byte(pc);
+        const auto carry = bit::msb(a);
+        a <<= 1;
+        a |= p.c;
+        p.c = carry;
+        set_z_and_n(a);
     }
 
     void ror()
     {
+        auto data = bus->read_byte(addr);
+        bus->write_byte(addr, data);
+        const auto carry = bit::lsb(data);
+        data >>= 1;
+        data |= p.c << 7;
+        bus->write_byte(addr, data);
+        p.c = carry;
+        set_z_and_n(data);
     }
 
     void ror_a()
     {
+        bus->read_byte(pc);
+        const auto carry = bit::lsb(a);
+        a >>= 1;
+        a |= p.c << 7;
+        p.c = carry;
+        set_z_and_n(a);
     }
 
     void rra()
