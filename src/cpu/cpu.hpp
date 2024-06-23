@@ -174,9 +174,14 @@ template <Addressable T> class Cpu
         s -= 1;
     }
 
-    std::uint8_t pull()
+    std::uint8_t pop()
     {
         s += 1;
+        return bus->read_byte(stack_addr + s);
+    }
+
+    std::uint8_t peek()
+    {
         return bus->read_byte(stack_addr + s);
     }
 
@@ -381,7 +386,7 @@ template <Addressable T> class Cpu
         next_byte();
         push(pc >> 8);
         push(static_cast<std::uint8_t>(pc));
-        // P is pushed with the B flag set.
+        // Push P with the B flag set.
         push(std::bit_cast<std::uint8_t>(p) | 1 << 4);
         p.i = true;
         const auto pc_low = bus->read_byte(irq_vector);
@@ -511,6 +516,12 @@ template <Addressable T> class Cpu
 
     void jsr()
     {
+        const auto pc_low = next_byte();
+        peek();
+        push(pc >> 8);
+        push(static_cast<std::uint8_t>(pc));
+        const auto pc_high = next_byte();
+        pc = num::combine(pc_high, pc_low);
     }
 
     void las()
@@ -548,10 +559,22 @@ template <Addressable T> class Cpu
 
     void lsr()
     {
+        auto data = bus->read_byte(addr);
+        bus->write_byte(addr, data);
+        const auto carry = bit::lsb(data);
+        data >>= 1;
+        bus->write_byte(addr, data);
+        p.c = carry;
+        set_z_and_n(data);
     }
 
     void lsr_a()
     {
+        bus->read_byte(pc);
+        const auto carry = bit::lsb(a);
+        a >>= 1;
+        p.c = carry;
+        set_z_and_n(a);
     }
 
     void lxa()
@@ -571,18 +594,34 @@ template <Addressable T> class Cpu
 
     void pha()
     {
+        bus->read_byte(pc);
+        push(a);
     }
 
     void php()
     {
+        bus->read_byte(pc);
+        // Push P with the B and U flags set.
+        push(std::bit_cast<std::uint8_t>(p) | 1 << 5 | 1 << 4);
     }
 
     void pla()
     {
+        bus->read_byte(pc);
+        peek();
+        a = pop();
+        set_z_and_n(a);
     }
 
     void plp()
     {
+        bus->read_byte(pc);
+        peek();
+        const auto prev_b = p.b;
+        const auto prev_u = p.u;
+        p = std::bit_cast<Status>(pop());
+        p.b = prev_b;
+        p.u = prev_u;
     }
 
     void rla()
