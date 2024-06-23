@@ -347,14 +347,25 @@ template <Addressable T> class Cpu
 
     void dec()
     {
+        auto data = bus->read_byte(addr);
+        bus->write_byte(addr, data);
+        data -= 1;
+        bus->write_byte(addr, data);
+        set_z_and_n(data);
     }
 
     void dex()
     {
+        bus->read_byte(pc);
+        x -= 1;
+        set_z_and_n(x);
     }
 
     void dey()
     {
+        bus->read_byte(pc);
+        y -= 1;
+        set_z_and_n(y);
     }
 
     void eor()
@@ -365,14 +376,25 @@ template <Addressable T> class Cpu
 
     void inc()
     {
+        auto data = bus->read_byte(addr);
+        bus->write_byte(addr, data);
+        data += 1;
+        bus->write_byte(addr, data);
+        set_z_and_n(data);
     }
 
     void inx()
     {
+        bus->read_byte(pc);
+        x += 1;
+        set_z_and_n(x);
     }
 
     void iny()
     {
+        bus->read_byte(pc);
+        y += 1;
+        set_z_and_n(y);
     }
 
     void isc()
