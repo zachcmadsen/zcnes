@@ -411,6 +411,11 @@ template <Addressable T> class Cpu
 
     void isc()
     {
+        auto data = bus->read_byte(addr);
+        bus->write_byte(addr, data);
+        data += 1;
+        bus->write_byte(addr, data);
+        add(data ^ 0xFF);
     }
 
     void jam()
@@ -520,6 +525,14 @@ template <Addressable T> class Cpu
 
     void rra()
     {
+        auto data = bus->read_byte(addr);
+        bus->write_byte(addr, data);
+        const auto carry = (data & 0x01) != 0;
+        data >>= 1;
+        data = static_cast<std::uint8_t>(p.c << 7) | data;
+        bus->write_byte(addr, data);
+        p.c = carry;
+        add(data);
     }
 
     void rti()
@@ -537,6 +550,8 @@ template <Addressable T> class Cpu
 
     void sbc()
     {
+        const auto data = bus->read_byte(addr);
+        add(data ^ 0xFF);
     }
 
     void sbx()
