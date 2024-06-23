@@ -347,6 +347,8 @@ template <Addressable T> class Cpu
 
     void ldy()
     {
+        y = bus->read_byte(addr);
+        set_z_and_n(y);
     }
 
     void lsr()
