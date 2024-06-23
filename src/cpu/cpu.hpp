@@ -108,6 +108,25 @@ template <Addressable T> class Cpu
         p.n = (data & 0x80) != 0;
     }
 
+    void branch(bool cond)
+    {
+        const auto offset = next_byte();
+        if (cond)
+        {
+            bus->read_byte(pc);
+            const auto prev_pc = pc;
+            pc += static_cast<std::int8_t>(offset);
+            const auto crossed_page = (prev_pc & 0xFF00) != (pc & 0xFF00);
+            if (crossed_page)
+            {
+                // TODO(zachcmadsen): Can this be simplified?
+                const auto low = static_cast<std::uint8_t>(prev_pc + offset);
+                const auto high = static_cast<std::uint8_t>(prev_pc >> 8);
+                bus->read_byte(num::combine(high, low));
+            }
+        }
+    }
+
     void abs()
     {
         const auto low = next_byte();
@@ -240,13 +259,17 @@ template <Addressable T> class Cpu
 
     void bcc()
     {
+        branch(!p.c);
     }
+
     void bcs()
     {
+        branch(p.c);
     }
 
     void beq()
     {
+        branch(p.z);
     }
 
     void bit()
@@ -255,14 +278,17 @@ template <Addressable T> class Cpu
 
     void bmi()
     {
+        branch(p.n);
     }
 
     void bne()
     {
+        branch(!p.z);
     }
 
     void bpl()
     {
+        branch(!p.n);
     }
 
     void brk()
@@ -271,10 +297,12 @@ template <Addressable T> class Cpu
 
     void bvc()
     {
+        branch(!p.v);
     }
 
     void bvs()
     {
+        branch(p.v);
     }
 
     void clc()
