@@ -1,6 +1,8 @@
 #pragma once
 
+#include <climits>
 #include <concepts>
+#include <cstddef>
 #include <cstdint>
 
 #if defined(__has_builtin)
@@ -42,6 +44,30 @@ inline constexpr bool overflowing_add(std::uint8_t lhs, std::uint8_t rhs, std::u
 }
 
 } // namespace num
+
+namespace bit
+{
+
+/// Returns true if and only if bit `n` of `byte` is set.
+template <std::size_t n> inline constexpr bool bit(std::uint8_t byte)
+{
+    static_assert(n < (sizeof(std::uint8_t) * CHAR_BIT));
+    return byte & (1 << n);
+}
+
+/// Returns true if and only if the least significant bit of `byte` is set.
+inline constexpr bool lsb(std::uint8_t byte)
+{
+    return bit<0>(byte);
+}
+
+/// Returns true if and only if the most significant bit of `byte` is set.
+inline constexpr bool msb(std::uint8_t byte)
+{
+    return bit<7>(byte);
+}
+
+} // namespace bit
 
 /// A type that can be addressed to read and write bytes.
 template <typename T>
@@ -105,7 +131,7 @@ template <Addressable T> class Cpu
     void set_z_and_n(std::uint8_t data)
     {
         p.z = data == 0;
-        p.n = (data & 0x80) != 0;
+        p.n = bit::msb(data);
     }
 
     void add(std::uint8_t data)
@@ -114,7 +140,7 @@ template <Addressable T> class Cpu
         std::uint8_t carry = 0;
         a = __builtin_addcb(a, data, p.c, &carry);
         p.c = carry;
-        p.v = (prev_a ^ a) & (data ^ a) & 0x80;
+        p.v = bit::msb((prev_a ^ a) & (data ^ a));
         set_z_and_n(a);
     }
 
@@ -241,10 +267,18 @@ template <Addressable T> class Cpu
 
     void alr()
     {
+        a &= bus->read_byte(addr);
+        const auto carry = bit::lsb(a);
+        a >>= 1;
+        p.c = carry;
+        set_z_and_n(a);
     }
 
     void anc()
     {
+        a &= bus->read_byte(addr);
+        p.c = bit::msb(a);
+        set_z_and_n(a);
     }
 
     void and_()
@@ -259,6 +293,12 @@ template <Addressable T> class Cpu
 
     void arr()
     {
+        a &= bus->read_byte(addr);
+        a >>= 1;
+        a |= p.c << 7;
+        p.c = bit::bit<6>(a);
+        p.v = p.c ^ bit::bit<5>(a);
+        set_z_and_n(a);
     }
 
     void asl()
@@ -527,9 +567,9 @@ template <Addressable T> class Cpu
     {
         auto data = bus->read_byte(addr);
         bus->write_byte(addr, data);
-        const auto carry = (data & 0x01) != 0;
+        const auto carry = bit::lsb(data);
         data >>= 1;
-        data = static_cast<std::uint8_t>(p.c << 7) | data;
+        data |= p.c << 7;
         bus->write_byte(addr, data);
         p.c = carry;
         add(data);
