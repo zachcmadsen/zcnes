@@ -7,7 +7,7 @@
 #include <cstdint>
 
 #if defined(__has_builtin)
-#if __has_builtin(__builtin_add_overflow)
+#if __has_builtin(__builtin_add_overflow) && __has_builtin(__builtin_sub_overflow)
 #define ZCNES_USE_OVERFLOW_BUILTIN 1
 #endif
 #endif
@@ -41,6 +41,18 @@ inline constexpr bool overflowing_add(std::uint8_t lhs, std::uint8_t rhs, std::u
 #else
     *res = wrapping_add(lhs, rhs);
     return *res < lhs;
+#endif
+}
+
+/// Computes `lhs` - `rhs` and returns a boolean indicating whether overflow
+/// occurred.
+inline constexpr bool overflowing_sub(std::uint8_t lhs, std::uint8_t rhs, std::uint8_t *res)
+{
+#ifdef ZCNES_USE_OVERFLOW_BUILTIN
+    return __builtin_sub_overflow(lhs, rhs, res);
+#else
+    *res = lhs - rhs;
+    return *res > lhs;
 #endif
 }
 
@@ -617,11 +629,10 @@ template <Addressable T> class Cpu
     {
         bus->read_byte(pc);
         peek();
-        const auto prev_b = p.b;
-        const auto prev_u = p.u;
-        p = std::bit_cast<Status>(pop());
-        p.b = prev_b;
-        p.u = prev_u;
+        auto new_p = std::bit_cast<Status>(pop());
+        new_p.b = p.b;
+        new_p.u = p.u;
+        p = new_p;
     }
 
     void rla()
@@ -695,10 +706,25 @@ template <Addressable T> class Cpu
 
     void rti()
     {
+        bus->read_byte(pc);
+        peek();
+        auto new_p = std::bit_cast<Status>(pop());
+        new_p.b = p.b;
+        new_p.u = p.u;
+        p = new_p;
+        const auto pc_low = pop();
+        const auto pc_high = pop();
+        pc = num::combine(pc_high, pc_low);
     }
 
     void rts()
     {
+        bus->read_byte(pc);
+        peek();
+        const auto pc_low = pop();
+        const auto pc_high = pop();
+        pc = num::combine(pc_high, pc_low);
+        next_byte();
     }
 
     void sax()
@@ -714,6 +740,10 @@ template <Addressable T> class Cpu
 
     void sbx()
     {
+        const auto data = bus->read_byte(addr);
+        const auto overflow = num::overflowing_sub(a & x, data, &x);
+        p.c = !overflow;
+        set_z_and_n(x);
     }
 
     void sec()
@@ -748,10 +778,26 @@ template <Addressable T> class Cpu
 
     void slo()
     {
+        auto data = bus->read_byte(addr);
+        bus->write_byte(addr, data);
+        const auto carry = bit::msb(data);
+        data <<= 1;
+        bus->write_byte(addr, data);
+        a |= data;
+        p.c = carry;
+        set_z_and_n(a);
     }
 
     void sre()
     {
+        auto data = bus->read_byte(addr);
+        bus->write_byte(addr, data);
+        const auto carry = bit::lsb(data);
+        data >>= 1;
+        bus->write_byte(addr, data);
+        a ^= data;
+        p.c = carry;
+        set_z_and_n(a);
     }
 
     void sta()
