@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bit>
 #include <climits>
 #include <concepts>
 #include <cstddef>
@@ -90,6 +91,10 @@ template <Addressable T> class Cpu
     void step();
 
   private:
+    static constexpr std::uint16_t stack_addr = 0x0100;
+
+    static constexpr std::uint16_t irq_vector = 0xFFFE;
+
 // Register members need to be public for processor tests.
 #ifdef ZCNES_PROCESSOR_TESTS
   public:
@@ -161,6 +166,18 @@ template <Addressable T> class Cpu
                 bus->read_byte(num::combine(high, low));
             }
         }
+    }
+
+    void push(std::uint8_t data)
+    {
+        bus->write_byte(stack_addr + s, data);
+        s -= 1;
+    }
+
+    std::uint8_t pull()
+    {
+        s += 1;
+        return bus->read_byte(stack_addr + s);
     }
 
     void abs()
@@ -303,10 +320,22 @@ template <Addressable T> class Cpu
 
     void asl()
     {
+        auto data = bus->read_byte(addr);
+        bus->write_byte(addr, data);
+        const auto carry = bit::msb(data);
+        data <<= 1;
+        bus->write_byte(addr, data);
+        p.c = carry;
+        set_z_and_n(data);
     }
 
     void asl_a()
     {
+        bus->read_byte(addr);
+        const auto carry = bit::msb(a);
+        a <<= 1;
+        p.c = carry;
+        set_z_and_n(a);
     }
 
     void bcc()
@@ -326,6 +355,10 @@ template <Addressable T> class Cpu
 
     void bit()
     {
+        const auto data = bus->read_byte(addr);
+        p.z = !(data & a);
+        p.v = bit::bit<6>(data);
+        p.n = bit::msb(data);
     }
 
     void bmi()
@@ -345,6 +378,15 @@ template <Addressable T> class Cpu
 
     void brk()
     {
+        next_byte();
+        push(pc >> 8);
+        push(static_cast<std::uint8_t>(pc));
+        // P is pushed with the B flag set.
+        push(std::bit_cast<std::uint8_t>(p) | 1 << 4);
+        p.i = true;
+        const auto pc_low = bus->read_byte(irq_vector);
+        const auto pc_high = bus->read_byte(irq_vector + 1);
+        pc = num::combine(pc_high, pc_low);
     }
 
     void bvc()
