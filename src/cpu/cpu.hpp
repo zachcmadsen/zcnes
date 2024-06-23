@@ -190,7 +190,7 @@ template <Addressable T> class Cpu
     {
     }
 
-    void andd()
+    void and_()
     {
     }
 
@@ -544,33 +544,33 @@ template <Addressable T> inline void Cpu<T>::step()
     case 0x1E: abx<write>(); asl();   break;
     case 0x1F: abx<write>(); slo();   break;
     case 0x20:               jsr();   break;
-    case 0x21: idx();        andd();  break;
+    case 0x21: idx();        and_();  break;
     case 0x23: idx();        rla();   break;
     case 0x24: zpg();        bit();   break;
-    case 0x25: zpg();        andd();  break;
+    case 0x25: zpg();        and_();  break;
     case 0x26: zpg();        rol();   break;
     case 0x27: zpg();        rla();   break;
     case 0x28:               plp();   break;
-    case 0x29: imm();        andd();  break;
+    case 0x29: imm();        and_();  break;
     case 0x2A:               rol_a(); break;
     case 0x2B: imm();        anc();   break;
     case 0x2C: abs();        bit();   break;
-    case 0x2D: abs();        andd();  break;
+    case 0x2D: abs();        and_();  break;
     case 0x2E: abs();        rol();   break;
     case 0x2F: abs();        rla();   break;
     case 0x30:               bmi();   break;
-    case 0x31: idy<read>();  andd();  break;
+    case 0x31: idy<read>();  and_();  break;
     case 0x33: idy<write>(); rla();   break;
     case 0x34: zpx();        nop();   break;
-    case 0x35: zpx();        andd();  break;
+    case 0x35: zpx();        and_();  break;
     case 0x36: zpx();        rol();   break;
     case 0x37: zpx();        rla();   break;
     case 0x38:               sec();   break;
-    case 0x39: aby<read>();  andd();  break;
+    case 0x39: aby<read>();  and_();  break;
     case 0x3A: imp();        nop();   break;
     case 0x3B: aby<write>(); rla();   break;
     case 0x3C: abx<read>();  nop();   break;
-    case 0x3D: abx<read>();  andd();  break;
+    case 0x3D: abx<read>();  and_();  break;
     case 0x3E: abx<write>(); rol();   break;
     case 0x3F: abx<write>(); rla();   break;
     case 0x40:               rti();   break;
