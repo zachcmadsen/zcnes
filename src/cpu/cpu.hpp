@@ -102,9 +102,13 @@ template <Addressable T> class Cpu
     /// Executes the next instruction.
     void step();
 
+    /// Executes the reset sequence.
+    void reset();
+
   private:
     static constexpr std::uint16_t stack_addr = 0x0100;
 
+    static constexpr std::uint16_t reset_vector = 0xFFFC;
     static constexpr std::uint16_t irq_vector = 0xFFFE;
 
 // Register members need to be public for processor tests.
@@ -629,6 +633,10 @@ template <Addressable T> class Cpu
 
     void lxa()
     {
+        // Store 0xFF & operand in A and X.
+        a = bus->read_byte(addr);
+        x = a;
+        set_z_and_n(a);
     }
 
     void nop()
@@ -1075,7 +1083,7 @@ template <Addressable T> inline void Cpu<T>::step()
     case 0xA8:               tay();   break;
     case 0xA9: imm();        lda();   break;
     case 0xAA:               tax();   break;
-    case 0xAB:                        break;
+    case 0xAB: imm();        lxa();   break;
     case 0xAC: abs();        ldy();   break;
     case 0xAD: abs();        lda();   break;
     case 0xAE: abs();        ldx();   break;
@@ -1159,6 +1167,21 @@ template <Addressable T> inline void Cpu<T>::step()
     case 0xFF: abx<write>(); isc();   break;
     }
     // clang-format on
+}
+
+template <Addressable T> inline void Cpu<T>::reset()
+{
+    bus->read_byte(pc);
+    peek();
+    s -= 1;
+    peek();
+    s -= 1;
+    peek();
+    s -= 1;
+    p.i = true;
+    const auto pc_low = bus->read_byte(reset_vector);
+    const auto pc_high = bus->read_byte(reset_vector + 1);
+    pc = num::combine(pc_high, pc_low);
 }
 
 } // namespace zcnes
