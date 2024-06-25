@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <span>
 
 #include <zcnes/core.hpp>
@@ -19,7 +20,7 @@ void Core::step()
     cpu.step();
 }
 
-std::uint8_t Core::peek(std::uint16_t addr) const
+std::optional<std::uint8_t> Core::peek(std::uint16_t addr) const
 {
     return bus.peek_byte(addr);
 }

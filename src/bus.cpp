@@ -1,6 +1,7 @@
 #include "bus.hpp"
 
 #include <cstdint>
+#include <optional>
 
 #include "cart.hpp"
 
@@ -18,20 +19,22 @@ Bus::Bus(Cart *cart) : cart{cart}
 
 std::uint8_t Bus::read_byte(std::uint16_t addr)
 {
+    std::uint8_t data = 0;
+
     if (addr <= 0x1FFF)
     {
-        return ram[mirror_ram_addr(addr)];
+        data = ram[mirror_ram_addr(addr)];
     }
     else if (addr >= 0x6000 && addr <= 0x7FFF)
     {
-        return cart->read_prg_ram(addr);
+        data = cart->read_prg_ram(addr);
     }
     else if (addr >= 0x8000)
     {
-        return cart->read_prg_rom(addr);
+        data = cart->read_prg_rom(addr);
     }
 
-    return 0;
+    return data;
 }
 
 void Bus::write_byte(std::uint16_t addr, std::uint8_t data)
@@ -46,22 +49,24 @@ void Bus::write_byte(std::uint16_t addr, std::uint8_t data)
     }
 }
 
-std::uint8_t Bus::peek_byte(std::uint16_t addr) const
+std::optional<std::uint8_t> Bus::peek_byte(std::uint16_t addr) const
 {
+    std::optional<std::uint8_t> data{};
+
     if (addr <= 0x1FFF)
     {
-        return ram[mirror_ram_addr(addr)];
+        data = ram[mirror_ram_addr(addr)];
     }
     else if (addr >= 0x6000 && addr <= 0x7FFF)
     {
-        return cart->read_prg_ram(addr);
+        data = cart->read_prg_ram(addr);
     }
     else if (addr >= 0x8000)
     {
-        return cart->read_prg_rom(addr);
+        data = cart->read_prg_rom(addr);
     }
 
-    return 0;
+    return data;
 }
 
 } // namespace zcnes

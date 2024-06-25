@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <span>
 
 #include <zcnes/core.hpp>
@@ -19,7 +20,7 @@ class Core final : public CoreBase
 
     void step() override;
 
-    [[nodiscard]] std::uint8_t peek(std::uint16_t addr) const override;
+    [[nodiscard]] std::optional<std::uint8_t> peek(std::uint16_t addr) const override;
 
   private:
     Cart cart;

@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstdint>
+#include <optional>
 
 #include "cart.hpp"
 
@@ -17,7 +18,7 @@ class Bus
 
     void write_byte(std::uint16_t addr, std::uint8_t data);
 
-    [[nodiscard]] std::uint8_t peek_byte(std::uint16_t addr) const;
+    [[nodiscard]] std::optional<std::uint8_t> peek_byte(std::uint16_t addr) const;
 
   private:
     std::array<std::uint8_t, 0x800> ram{};

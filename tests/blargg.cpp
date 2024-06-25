@@ -30,27 +30,27 @@ void run(const std::filesystem::path &path)
 
     auto core = zcnes::make_core(rom);
 
-    auto status = core->peek(status_addr);
+    auto status = core->peek(status_addr).value();
     while (status != running_status)
     {
         core->step();
-        status = core->peek(status_addr);
+        status = core->peek(status_addr).value();
     }
 
     while (status == running_status)
     {
         core->step();
-        status = core->peek(status_addr);
+        status = core->peek(status_addr).value();
     }
 
     std::vector<std::uint8_t> output{};
     auto addr = output_addr;
-    auto c = core->peek(addr);
+    auto c = core->peek(addr).value();
     while (c != '\0')
     {
         output.push_back(c);
         addr += 1;
-        c = core->peek(addr);
+        c = core->peek(addr).value();
     }
 
     std::string str{output.begin(), output.end()};
