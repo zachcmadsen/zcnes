@@ -9,9 +9,13 @@ message(STATUS "Fetching cista...")
 FetchContent_MakeAvailable(cista)
 
 add_executable(single-step single_step.cpp)
-target_link_libraries(single-step PRIVATE cpu cista)
-# single-step tests are too slow without some optimizations.
+target_link_libraries(single-step PRIVATE zcnes cista)
+# Single step tests are too slow without some optimizations.
 target_compile_options(single-step PRIVATE "$<$<CONFIG:Debug>:-O1>")
+
+# Use zcnes's private include directories to test the CPU implementation.
+get_target_property (ZCNES_PRIVATE_INCLUDE_DIRS zcnes INCLUDE_DIRECTORIES)
+target_include_directories (single-step PRIVATE ${ZCNES_PRIVATE_INCLUDE_DIRS})
 
 set(OPCODES_TO_SKIP "02" "12" "22" "32" "42" "52" "62" "72" "92" "b2" "d2" "f2" "8b" "ab")
 foreach(OPCODE RANGE 255)

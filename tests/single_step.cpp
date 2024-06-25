@@ -18,7 +18,7 @@
 #include <cista/serialization.h>
 
 #define ZCNES_PROCESSOR_TESTS
-#include "cpu.hpp"
+#include <cpu.hpp>
 
 constexpr void zcnes_assert(bool condition, const std::source_location location = std::source_location::current())
 {
