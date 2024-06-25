@@ -1,14 +1,17 @@
 #include "core.hpp"
 
+#include <cstdint>
 #include <memory>
+#include <span>
 
 #include <zcnes/core.hpp>
 
 namespace zcnes
 {
 
-Core::Core() : cpu{&bus}
+Core::Core(std::span<const std::uint8_t> rom) : cart{rom}, bus{&cart}, cpu{&bus}
 {
+    cpu.reset();
 }
 
 void Core::step()
@@ -16,9 +19,14 @@ void Core::step()
     cpu.step();
 }
 
-std::unique_ptr<CoreBase> make_core()
+std::uint8_t Core::peek(std::uint16_t addr) const
 {
-    return std::make_unique<Core>();
+    return bus.peek_byte(addr);
+}
+
+std::unique_ptr<CoreBase> make_core(std::span<const std::uint8_t> rom)
+{
+    return std::make_unique<Core>(rom);
 }
 
 } // namespace zcnes

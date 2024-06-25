@@ -9,7 +9,9 @@ message(STATUS "Fetching cista...")
 FetchContent_MakeAvailable(cista)
 
 add_executable(single-step single_step.cpp)
+target_include_directories(single-step PRIVATE .)
 target_link_libraries(single-step PRIVATE zcnes cista)
+
 # Single step tests are too slow without some optimizations.
 target_compile_options(single-step PRIVATE "$<$<CONFIG:Debug>:-O1>")
 
@@ -33,4 +35,15 @@ foreach(OPCODE RANGE 255)
   if (NOT "${TRIMMED_HEX_OPCODE}" IN_LIST OPCODES_TO_SKIP)
     add_test("single-step.${TRIMMED_HEX_OPCODE}" single-step "${CMAKE_SOURCE_DIR}/../zcnes-tests/ProcessorTests" ${OPCODE})
   endif()
+endforeach()
+
+add_executable(blargg blargg.cpp)
+target_include_directories(blargg PRIVATE .)
+target_link_libraries(blargg PRIVATE zcnes)
+
+file(GLOB files "${CMAKE_SOURCE_DIR}/../zcnes-tests/instr_test-v5/*.nes")
+foreach(file ${files})
+  cmake_path(GET file STEM TEST_NAME)
+  string(SUBSTRING "${TEST_NAME}" 3 -1 TRIMMED_TEST_NAME)
+  add_test("instr_test-v5.${TRIMMED_TEST_NAME}" blargg ${file})
 endforeach()
