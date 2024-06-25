@@ -1,0 +1,148 @@
+#include <array>
+#include <bit>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <exception>
+#include <filesystem>
+#include <format>
+#include <iostream>
+#include <source_location>
+#include <span>
+#include <stdexcept>
+#include <string>
+
+#include <cista/containers/string.h>
+#include <cista/containers/vector.h>
+#include <cista/mmap.h>
+#include <cista/serialization.h>
+
+#define ZCNES_PROCESSOR_TESTS
+#include "cpu.hpp"
+
+constexpr void zcnes_assert(bool condition, const std::source_location location = std::source_location::current())
+{
+    if (!condition)
+    {
+        throw std::runtime_error(
+            std::format("assertion failed at {}:{}:{}", location.file_name(), location.line(), location.column()));
+    }
+}
+
+constexpr std::size_t addr_space_size = 0x10000;
+
+struct RamState
+{
+    std::uint16_t addr;
+    std::uint8_t data;
+};
+
+struct BusState
+{
+    std::uint16_t addr;
+    std::uint8_t data;
+    cista::offset::string kind;
+
+    bool operator==(const BusState &) const = default;
+};
+
+struct CpuState
+{
+    std::uint16_t pc;
+    std::uint8_t s;
+    std::uint8_t a;
+    std::uint8_t x;
+    std::uint8_t y;
+    std::uint8_t p;
+    cista::offset::vector<RamState> ram;
+};
+
+struct ProcessorTest
+{
+    CpuState initial;
+    CpuState final;
+    cista::offset::vector<BusState> cycles;
+};
+
+struct ProcessorTestBus
+{
+    std::array<std::uint8_t, addr_space_size> ram{};
+    cista::offset::vector<BusState> cycles{};
+
+    std::uint8_t read_byte(std::uint16_t addr)
+    {
+        const auto data = ram.at(addr);
+        cycles.emplace_back(addr, data, "read");
+        return data;
+    }
+
+    void write_byte(std::uint16_t addr, std::uint8_t data)
+    {
+        cycles.emplace_back(addr, data, "write");
+        ram.at(addr) = data;
+    }
+};
+
+void run(const std::filesystem::path &dir, std::uint8_t opcode)
+{
+    const auto filename = std::format("{}/{:02x}.cista", dir.c_str(), opcode);
+    const auto buf = cista::mmap(filename.c_str(), cista::mmap::protection::READ);
+    const auto *tests = cista::deserialize<cista::offset::vector<ProcessorTest>>(buf);
+
+    ProcessorTestBus bus{};
+    zcnes::Cpu cpu{&bus};
+
+    for (const auto &test : *tests)
+    {
+        cpu.pc = test.initial.pc;
+        cpu.s = test.initial.s;
+        cpu.a = test.initial.a;
+        cpu.x = test.initial.x;
+        cpu.y = test.initial.y;
+        cpu.p = std::bit_cast<zcnes::Cpu<ProcessorTestBus>::Status>(test.initial.p);
+        for (const auto &[addr, data] : test.initial.ram)
+        {
+            bus.ram.at(addr) = data;
+        }
+        bus.cycles.clear();
+
+        cpu.step();
+
+        zcnes_assert(cpu.pc == test.final.pc);
+        zcnes_assert(cpu.s == test.final.s);
+        zcnes_assert(cpu.a == test.final.a);
+        zcnes_assert(cpu.x == test.final.x);
+        zcnes_assert(cpu.y == test.final.y);
+        zcnes_assert(std::bit_cast<std::uint8_t>(cpu.p) == test.final.p);
+        for (const auto &[addr, data] : test.final.ram)
+        {
+            zcnes_assert(bus.ram.at(addr) == data);
+        }
+        zcnes_assert(bus.cycles == test.cycles);
+    }
+}
+
+int main(int argc, char *argv[])
+{
+    std::span<char *> args{argv, static_cast<std::size_t>(argc)};
+    if (args.size() < 3)
+    {
+        std::cerr << "error: missing directory and opcode arguments\n";
+        return EXIT_FAILURE;
+    }
+
+    const std::filesystem::path dir{args[1]};
+    const auto opcode = std::stoul(args[2]);
+
+    try
+    {
+        run(dir, opcode);
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << e.what() << '\n';
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
+}
