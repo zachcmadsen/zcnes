@@ -14,7 +14,6 @@ target_link_libraries(single-step PRIVATE cpu cista)
 target_compile_options(single-step PRIVATE "$<$<CONFIG:Debug>:-O1>")
 
 set(OPCODES_TO_SKIP "02" "12" "22" "32" "42" "52" "62" "72" "92" "b2" "d2" "f2" "8b" "ab")
-
 foreach(OPCODE RANGE 255)
   math(EXPR HEX_OPCODE ${OPCODE} OUTPUT_FORMAT HEXADECIMAL)
 
