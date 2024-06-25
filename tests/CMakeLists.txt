@@ -1,5 +1,13 @@
 include(FetchContent)
 
+include(FetchContent)
+FetchContent_Declare(
+  zcnes-tests
+  URL https://github.com/zachcmadsen/zcnes-tests/archive/refs/tags/v0.1.zip
+)
+message(STATUS "Fetching zcnes-tests")
+FetchContent_MakeAvailable(zcnes-tests)
+
 FetchContent_Declare(
     cista
     GIT_REPOSITORY https://github.com/felixguendling/cista
@@ -33,7 +41,7 @@ foreach(OPCODE RANGE 255)
   endif()
 
   if (NOT "${TRIMMED_HEX_OPCODE}" IN_LIST OPCODES_TO_SKIP)
-    add_test("single-step.${TRIMMED_HEX_OPCODE}" single-step "${CMAKE_SOURCE_DIR}/../zcnes-tests/ProcessorTests" ${OPCODE})
+    add_test("single-step.${TRIMMED_HEX_OPCODE}" single-step "${zcnes-tests_SOURCE_DIR}/single_step" ${OPCODE})
   endif()
 endforeach()
 
@@ -41,7 +49,7 @@ add_executable(blargg blargg.cpp)
 target_include_directories(blargg PRIVATE .)
 target_link_libraries(blargg PRIVATE zcnes)
 
-file(GLOB files "${CMAKE_SOURCE_DIR}/../zcnes-tests/instr_test-v5/*.nes")
+file(GLOB files "${zcnes-tests_SOURCE_DIR}/instr_test-v5/*.nes")
 foreach(file ${files})
   cmake_path(GET file STEM TEST_NAME)
   string(SUBSTRING "${TEST_NAME}" 3 -1 TRIMMED_TEST_NAME)
