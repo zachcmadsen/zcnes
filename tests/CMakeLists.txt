@@ -5,7 +5,7 @@ FetchContent_Declare(
   zcnes-tests
   URL https://github.com/zachcmadsen/zcnes-tests/archive/refs/tags/v0.1.zip
 )
-message(STATUS "Fetching zcnes-tests")
+message(STATUS "Fetching zcnes-tests...")
 FetchContent_MakeAvailable(zcnes-tests)
 
 FetchContent_Declare(
@@ -28,20 +28,11 @@ get_target_property (ZCNES_PRIVATE_INCLUDE_DIRS zcnes INCLUDE_DIRECTORIES)
 target_include_directories (single-step PRIVATE ${ZCNES_PRIVATE_INCLUDE_DIRS})
 
 set(OPCODES_TO_SKIP "02" "12" "22" "32" "42" "52" "62" "72" "92" "b2" "d2" "f2" "8b" "ab")
-foreach(OPCODE RANGE 255)
-  math(EXPR HEX_OPCODE ${OPCODE} OUTPUT_FORMAT HEXADECIMAL)
-
-  # Trim '0x' from HEX_OPCODE.
-  string(SUBSTRING "${HEX_OPCODE}" 2 -1 TRIMMED_HEX_OPCODE)
-
-  # Add a leading zero to one digit numbers.
-  string(LENGTH ${TRIMMED_HEX_OPCODE} TRIMMED_HEX_OPCODE_LENGTH)
-  if (${TRIMMED_HEX_OPCODE_LENGTH} EQUAL 1)
-    set(TRIMMED_HEX_OPCODE "0${TRIMMED_HEX_OPCODE}")
-  endif()
-
-  if (NOT "${TRIMMED_HEX_OPCODE}" IN_LIST OPCODES_TO_SKIP)
-    add_test("single-step.${TRIMMED_HEX_OPCODE}" single-step "${zcnes-tests_SOURCE_DIR}/single_step" ${OPCODE})
+file(GLOB SINGLE_STEP_FILES "${zcnes-tests_SOURCE_DIR}/single_step/*.cista")
+foreach(SINGLE_STEP_FILE ${SINGLE_STEP_FILES})
+  cmake_path(GET SINGLE_STEP_FILE STEM OPCODE)
+  if (NOT "${OPCODE}" IN_LIST OPCODES_TO_SKIP)
+    add_test("single-step.${OPCODE}" single-step ${SINGLE_STEP_FILE})
   endif()
 endforeach()
 
@@ -49,9 +40,9 @@ add_executable(blargg blargg.cpp)
 target_include_directories(blargg PRIVATE .)
 target_link_libraries(blargg PRIVATE zcnes)
 
-file(GLOB files "${zcnes-tests_SOURCE_DIR}/instr_test-v5/*.nes")
-foreach(file ${files})
-  cmake_path(GET file STEM TEST_NAME)
-  string(SUBSTRING "${TEST_NAME}" 3 -1 TRIMMED_TEST_NAME)
-  add_test("instr_test-v5.${TRIMMED_TEST_NAME}" blargg ${file})
+file(GLOB INSTR_TEST_FILES "${zcnes-tests_SOURCE_DIR}/instr_test-v5/*.nes")
+foreach(INSTR_TEST_FILE ${INSTR_TEST_FILES})
+  cmake_path(GET INSTR_TEST_FILE STEM INSTR_TEST_NAME)
+  string(SUBSTRING "${INSTR_TEST_NAME}" 3 -1 TRIMMED_INSTR_TEST_NAME)
+  add_test("instr_test-v5.${TRIMMED_INSTR_TEST_NAME}" blargg ${INSTR_TEST_FILE})
 endforeach()

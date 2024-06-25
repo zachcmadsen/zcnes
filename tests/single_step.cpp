@@ -73,10 +73,9 @@ struct ProcessorTestBus
     }
 };
 
-void run(const std::filesystem::path &dir, std::uint8_t opcode)
+void run(const std::filesystem::path &path)
 {
-    const auto filename = std::format("{}/{:02x}.cista", dir.c_str(), opcode);
-    const auto buf = cista::mmap(filename.c_str(), cista::mmap::protection::READ);
+    const auto buf = cista::mmap(path.c_str(), cista::mmap::protection::READ);
     const auto *tests = cista::deserialize<cista::offset::vector<ProcessorTest>>(buf);
 
     ProcessorTestBus bus{};
@@ -115,18 +114,17 @@ void run(const std::filesystem::path &dir, std::uint8_t opcode)
 int main(int argc, char *argv[])
 {
     std::span<char *> args{argv, static_cast<std::size_t>(argc)};
-    if (args.size() < 3)
+    if (args.size() < 2)
     {
-        std::cerr << "error: missing directory and opcode arguments\n";
+        std::cerr << "error: no input file\n";
         return EXIT_FAILURE;
     }
 
-    const std::filesystem::path dir{args[1]};
-    const auto opcode = std::stoul(args[2]);
+    const std::filesystem::path path{args[1]};
 
     try
     {
-        run(dir, opcode);
+        run(path);
     }
     catch (const std::exception &e)
     {

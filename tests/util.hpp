@@ -1,14 +1,14 @@
 #pragma once
 
-#include <format>
 #include <source_location>
 #include <stdexcept>
+#include <string>
 
 constexpr void zcnes_assert(bool condition, const std::source_location location = std::source_location::current())
 {
     if (!condition)
     {
-        throw std::runtime_error(
-            std::format("assertion failed at {}:{}:{}", location.file_name(), location.line(), location.column()));
+        throw std::runtime_error("assertion failed at " + std::string{location.file_name()} + ":" +
+                                 std::to_string(location.line()) + ":" + std::to_string(location.column()));
     }
 }

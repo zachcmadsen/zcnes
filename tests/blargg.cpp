@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
     std::span<char *> args{argv, static_cast<std::size_t>(argc)};
     if (args.size() < 2)
     {
-        std::cerr << "error: missing directory argument\n";
+        std::cerr << "error: no input file\n";
         return EXIT_FAILURE;
     }
 
