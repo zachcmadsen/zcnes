@@ -7,27 +7,17 @@
 #include <filesystem>
 #include <format>
 #include <iostream>
-#include <source_location>
 #include <span>
-#include <stdexcept>
 #include <string>
 
 #include <cista/containers/string.h>
 #include <cista/containers/vector.h>
 #include <cista/mmap.h>
 #include <cista/serialization.h>
-
 #define ZCNES_PROCESSOR_TESTS
 #include <cpu.hpp>
 
-constexpr void zcnes_assert(bool condition, const std::source_location location = std::source_location::current())
-{
-    if (!condition)
-    {
-        throw std::runtime_error(
-            std::format("assertion failed at {}:{}:{}", location.file_name(), location.line(), location.column()));
-    }
-}
+#include "util.hpp"
 
 constexpr std::size_t addr_space_size = 0x10000;
 
