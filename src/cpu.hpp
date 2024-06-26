@@ -56,6 +56,19 @@ inline constexpr bool overflowing_sub(std::uint8_t lhs, std::uint8_t rhs, std::u
 #endif
 }
 
+inline std::uint8_t carrying_add(std::uint8_t lhs, std::uint8_t rhs, std::uint8_t carry_in, std::uint8_t *carry_out)
+{
+#if __has_builtin(__builtin_addcb)
+    return __builtin_addcb(lhs, rhs, carry_in, carry_out);
+#else
+    std::uint8_t res;
+    std::uint8_t overflow = overflowing_add(lhs, rhs, &res);
+    overflow |= overflowing_add(res, carry_in, &res);
+    *carry_out = overflow;
+    return res;
+#endif
+}
+
 } // namespace num
 
 namespace bit
@@ -178,7 +191,7 @@ template <Addressable T> class Cpu
     {
         const auto prev_a = a;
         std::uint8_t carry = 0;
-        a = __builtin_addcb(a, data, p.c, &carry);
+        a = num::carrying_add(a, data, p.c, &carry);
         p.c = carry;
         p.v = bit::msb((prev_a ^ a) & (data ^ a));
         set_z_and_n(a);
