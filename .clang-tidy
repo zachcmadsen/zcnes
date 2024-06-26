@@ -8,6 +8,7 @@ Checks: >
   performance-*,
   readability-*,
   -cppcoreguidelines-avoid-magic-numbers,
+  -google-readability-todo,
   -modernize-use-trailing-return-type,
   -readability-identifier-length,
   -readability-magic-numbers,

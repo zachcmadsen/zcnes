@@ -123,7 +123,7 @@ template <Addressable T> class Cpu
             const auto crossed_page = (prev_pc & 0xFF00) != (pc & 0xFF00);
             if (crossed_page)
             {
-                // TODO(zachcmadsen): Can this be simplified?
+                // TODO: Can this be simplified?
                 const auto low = static_cast<std::uint8_t>(prev_pc + offset);
                 const auto high = static_cast<std::uint8_t>(prev_pc >> 8);
                 bus->read_byte(combine(high, low));
@@ -145,7 +145,7 @@ template <Addressable T> class Cpu
     /// how the instructions work.
     void sh(std::uint8_t data)
     {
-        // TODO(zachcmadsen): Write this better?
+        // TODO: Write this better?
         const auto low = static_cast<std::uint8_t>(addr);
         std::uint8_t high = addr >> 8;
         data &= high + static_cast<std::uint8_t>(!page_cross);
