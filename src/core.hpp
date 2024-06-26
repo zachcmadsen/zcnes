@@ -9,6 +9,7 @@
 #include "bus.hpp"
 #include "cart.hpp"
 #include "cpu.hpp"
+#include "scheduler.hpp"
 
 namespace zcnes
 {
@@ -23,6 +24,7 @@ class Core final : public CoreBase
     [[nodiscard]] std::optional<std::uint8_t> peek(std::uint16_t addr) const override;
 
   private:
+    Scheduler scheduler{};
     Cart cart;
     Bus bus;
     Cpu<Bus> cpu;

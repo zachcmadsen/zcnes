@@ -4,6 +4,7 @@
 #include <optional>
 
 #include "cart.hpp"
+#include "scheduler.hpp"
 
 namespace zcnes
 {
@@ -13,12 +14,14 @@ std::uint16_t mirror_ram_addr(std::uint16_t addr)
     return addr & 0x07FF;
 }
 
-Bus::Bus(Cart *cart) : cart{cart}
+Bus::Bus(Cart *cart, Scheduler *scheduler) : cart{cart}, scheduler{scheduler}
 {
 }
 
 std::uint8_t Bus::read_byte(std::uint16_t addr)
 {
+    scheduler->tick();
+
     std::uint8_t data = 0;
 
     if (addr <= 0x1FFF)
@@ -39,6 +42,8 @@ std::uint8_t Bus::read_byte(std::uint16_t addr)
 
 void Bus::write_byte(std::uint16_t addr, std::uint8_t data)
 {
+    scheduler->tick();
+
     if (addr <= 0x1FFF)
     {
         ram[mirror_ram_addr(addr)] = data;

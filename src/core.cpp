@@ -7,16 +7,27 @@
 
 #include <zcnes/core.hpp>
 
+#include "scheduler.hpp"
+
 namespace zcnes
 {
 
-Core::Core(std::span<const std::uint8_t> rom) : cart{rom}, bus{&cart}, cpu{&bus}
+Core::Core(std::span<const std::uint8_t> rom) : cart{rom}, bus{&cart, &scheduler}, cpu{&bus}
 {
-    cpu.reset();
+    scheduler.add(0, EventKind::Reset);
 }
 
 void Core::step()
 {
+    scheduler.check([this](EventKind event_kind) {
+        switch (event_kind)
+        {
+        case EventKind::Reset:
+            this->cpu.reset();
+            break;
+        }
+    });
+
     cpu.step();
 }
 
