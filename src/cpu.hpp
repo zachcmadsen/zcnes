@@ -240,16 +240,18 @@ template <Addressable T> class Cpu
 
     void zpx()
     {
-        const auto addr = next_byte();
+        auto addr = next_byte();
         bus->read_byte(addr);
-        this->addr = wrapping_add(addr, x);
+        addr += x;
+        this->addr = addr;
     }
 
     void zpy()
     {
-        const auto addr = next_byte();
+        auto addr = next_byte();
         bus->read_byte(addr);
-        this->addr = wrapping_add(addr, y);
+        addr += y;
+        this->addr = addr;
     }
 
     void adc()

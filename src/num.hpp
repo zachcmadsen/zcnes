@@ -19,12 +19,6 @@ inline constexpr std::uint16_t combine(std::uint8_t high, std::uint8_t low)
     return static_cast<std::uint16_t>(static_cast<unsigned>(high) << 8 | static_cast<unsigned>(low));
 }
 
-/// Computes `lhs` + `rhs`, wrapping at the max value of `std::uint8_t`.
-inline constexpr std::uint8_t wrapping_add(std::uint8_t lhs, std::uint8_t rhs)
-{
-    return lhs + rhs;
-}
-
 /// Computes `lhs` + `rhs` and returns a boolean indicating whether overflow
 /// occurred.
 inline constexpr bool overflowing_add(std::uint8_t lhs, std::uint8_t rhs, std::uint8_t *res)
@@ -32,7 +26,7 @@ inline constexpr bool overflowing_add(std::uint8_t lhs, std::uint8_t rhs, std::u
 #ifdef ZCNES_USE_OVERFLOW_BUILTIN
     return __builtin_add_overflow(lhs, rhs, res);
 #else
-    *res = wrapping_add(lhs, rhs);
+    *res = lhs + rhs;
     return *res < lhs;
 #endif
 }
@@ -49,15 +43,17 @@ inline constexpr bool overflowing_sub(std::uint8_t lhs, std::uint8_t rhs, std::u
 #endif
 }
 
-inline std::uint8_t carrying_add(std::uint8_t lhs, std::uint8_t rhs, std::uint8_t carry_in, std::uint8_t *carry_out)
+/// Computes `lhs` + `rhs` + `carry`, returns the sum, and stores the ouput
+/// carry in `out`.
+inline std::uint8_t carrying_add(std::uint8_t lhs, std::uint8_t rhs, std::uint8_t carry, std::uint8_t *out)
 {
 #if __has_builtin(__builtin_addcb)
-    return __builtin_addcb(lhs, rhs, carry_in, carry_out);
+    return __builtin_addcb(lhs, rhs, carry, out);
 #else
     std::uint8_t res;
     std::uint8_t overflow = overflowing_add(lhs, rhs, &res);
-    overflow |= overflowing_add(res, carry_in, &res);
-    *carry_out = overflow;
+    overflow |= overflowing_add(res, carry, &res);
+    *out = overflow;
     return res;
 #endif
 }
