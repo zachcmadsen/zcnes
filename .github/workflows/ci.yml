@@ -7,7 +7,11 @@ on:
 
 jobs:
   linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+
+    strategy:
+      matrix:
+        compiler: ["clang++-17, g++-14"]
 
     steps:
       - uses: actions/checkout@v4
@@ -18,15 +22,8 @@ jobs:
           unzip ninja-linux.zip -d bin
           echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
 
-      - name: Install Clang 17
-        # The commands are from https://apt.llvm.org.
-        run: | 
-          wget https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          sudo ./llvm.sh 17
-
       - name: Configure
-        run: cmake --preset ci-linux
+        run: cmake -S . -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} 
 
       - name: Build
         run: cmake --build build
