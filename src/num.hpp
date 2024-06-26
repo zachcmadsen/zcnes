@@ -3,8 +3,8 @@
 #include <cstdint>
 
 #if defined(__has_builtin)
-#if __has_builtin(__builtin_add_overflow) && __has_builtin(__builtin_sub_overflow)
-#define ZCNES_USE_OVERFLOW_BUILTIN 1
+#if __has_builtin(__builtin_add_overflow) && __has_builtin(__builtin_sub_overflow) && __has_builtin(__builtin_addcb)
+#define ZCNES_HAS_BUILTINS 1
 #endif
 #endif
 
@@ -23,7 +23,7 @@ inline constexpr std::uint16_t combine(std::uint8_t high, std::uint8_t low)
 /// occurred.
 inline constexpr bool overflowing_add(std::uint8_t lhs, std::uint8_t rhs, std::uint8_t *res)
 {
-#ifdef ZCNES_USE_OVERFLOW_BUILTIN
+#ifdef ZCNES_HAS_BUILTINS
     return __builtin_add_overflow(lhs, rhs, res);
 #else
     *res = lhs + rhs;
@@ -35,7 +35,7 @@ inline constexpr bool overflowing_add(std::uint8_t lhs, std::uint8_t rhs, std::u
 /// occurred.
 inline constexpr bool overflowing_sub(std::uint8_t lhs, std::uint8_t rhs, std::uint8_t *res)
 {
-#ifdef ZCNES_USE_OVERFLOW_BUILTIN
+#ifdef ZCNES_HAS_BUILTINS
     return __builtin_sub_overflow(lhs, rhs, res);
 #else
     *res = lhs - rhs;
@@ -47,7 +47,7 @@ inline constexpr bool overflowing_sub(std::uint8_t lhs, std::uint8_t rhs, std::u
 /// carry in `out`.
 inline std::uint8_t carrying_add(std::uint8_t lhs, std::uint8_t rhs, std::uint8_t carry, std::uint8_t *out)
 {
-#if __has_builtin(__builtin_addcb)
+#ifdef ZCNES_HAS_BUILTINS
     return __builtin_addcb(lhs, rhs, carry, out);
 #else
     std::uint8_t res;
