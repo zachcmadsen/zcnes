@@ -15,7 +15,7 @@ jobs:
           - c_compiler: "clang-17"
             cxx_compiler: "clang++-17"
           - c_compiler: "gcc-14"
-            cxx_compiler: "gcc++-14"
+            cxx_compiler: "g++-14"
 
     steps:
       - uses: actions/checkout@v4
