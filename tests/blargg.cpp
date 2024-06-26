@@ -22,10 +22,8 @@ constexpr std::uint8_t running_status = 0x80;
 
 void run(const std::filesystem::path &path)
 {
-
     std::ifstream ifs{path, std::ios::binary};
     zcnes_assert(ifs.is_open());
-
     const std::vector<std::uint8_t> rom{std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
 
     auto core = zcnes::make_core(rom);
