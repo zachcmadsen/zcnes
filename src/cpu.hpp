@@ -39,8 +39,8 @@ template <Addressable T> class Cpu
     static constexpr std::uint16_t reset_vector = 0xFFFC;
     static constexpr std::uint16_t irq_vector = 0xFFFE;
 
-// Register members need to be public for processor tests.
-#ifdef ZCNES_PROCESSOR_TESTS
+// Register members need to be public for single step tests.
+#ifdef ZCNES_SINGLE_STEP_TESTS
   public:
 #endif
     struct Status
@@ -62,7 +62,7 @@ template <Addressable T> class Cpu
     std::uint8_t y{0};
     std::uint8_t s{0xFD};
     Status p{false, false, true, false, false, true, false, false};
-#ifdef ZCNES_PROCESSOR_TESTS
+#ifdef ZCNES_SINGLE_STEP_TESTS
   private:
 #endif
 

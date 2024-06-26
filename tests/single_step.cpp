@@ -12,7 +12,7 @@
 #include <cista/containers/vector.h>
 #include <cista/mmap.h>
 #include <cista/serialization.h>
-#define ZCNES_PROCESSOR_TESTS
+#define ZCNES_SINGLE_STEP_TESTS
 #include <cpu.hpp>
 
 #include "util.hpp"
