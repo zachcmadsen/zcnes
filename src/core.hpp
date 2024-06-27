@@ -9,6 +9,7 @@
 #include "bus.hpp"
 #include "cart.hpp"
 #include "cpu.hpp"
+#include "ppu.hpp"
 #include "scheduler.hpp"
 
 namespace zcnes
@@ -28,6 +29,7 @@ class Core final : public CoreBase
     Cart cart;
     Bus bus;
     Cpu<Bus> cpu;
+    Ppu ppu;
 };
 
 } // namespace zcnes

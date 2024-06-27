@@ -33,9 +33,23 @@ template <Addressable T> class Cpu
     /// Executes the reset sequence.
     void reset();
 
+    /// Executes an NMI.
+    void nmi()
+    {
+        bus->read_byte(pc);
+        push(pc >> 8);
+        push(pc);
+        push(std::bit_cast<std::uint8_t>(p));
+        p.i = true;
+        const auto pc_low = bus->read_byte(nmi_vector);
+        const auto pc_high = bus->read_byte(nmi_vector + 1);
+        pc = combine(pc_high, pc_low);
+    }
+
   private:
     static constexpr std::uint16_t stack_addr = 0x0100;
 
+    static constexpr std::uint16_t nmi_vector = 0xFFFA;
     static constexpr std::uint16_t reset_vector = 0xFFFC;
     static constexpr std::uint16_t irq_vector = 0xFFFE;
 

@@ -1,6 +1,7 @@
 #include "core.hpp"
 
 #include <cstdint>
+#include <iostream>
 #include <memory>
 #include <optional>
 #include <span>
@@ -12,9 +13,10 @@
 namespace zcnes
 {
 
-Core::Core(std::span<const std::uint8_t> rom) : cart{rom}, bus{&cart, &scheduler}, cpu{&bus}
+Core::Core(std::span<const std::uint8_t> rom) : cart{rom}, ppu{&scheduler}, bus{&cart, &ppu, &scheduler}, cpu{&bus}
 {
     scheduler.add(0, EventKind::Reset);
+    scheduler.add(29781, EventKind::VBlank);
 }
 
 void Core::step()
@@ -24,6 +26,13 @@ void Core::step()
         {
         case EventKind::Reset:
             this->cpu.reset();
+            break;
+        case EventKind::Nmi:
+            this->cpu.nmi();
+            break;
+        case EventKind::VBlank:
+            this->ppu.run();
+            scheduler.add(29781, EventKind::VBlank);
             break;
         }
     });

@@ -3,6 +3,8 @@
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
+#include <format>
+#include <iostream>
 #include <limits>
 #include <vector>
 
@@ -11,38 +13,37 @@ namespace zcnes
 
 enum class EventKind
 {
-    Reset
+    Reset,
+    Nmi,
+    VBlank
 };
 
 class Scheduler
 {
   public:
-    void add(std::uint64_t timestamp, EventKind kind)
+    void add(EventKind kind)
+    {
+        add(0, kind);
+    }
+
+    void add(std::uint64_t rel_timestamp, EventKind kind)
     {
         // TODO: Set a maximum number of events?
-        events.emplace_back(timestamp, kind);
+        events.emplace_back(rel_timestamp + timestamp, kind);
         find_next_event();
     }
 
     template <std::invocable<EventKind> T> void check(T &&f)
     {
-        if (timestamp < next_event_timestamp)
+        while (next_event_timestamp <= timestamp)
         {
-            return;
-        }
+            const auto next_event = events[next_event_index];
+            std::forward<T>(f)(next_event.kind);
 
-        const auto next_event = events[next_event_index];
-        std::forward<T>(f)(next_event.kind);
+            events[next_event_index] = events.back();
+            events.pop_back();
 
-        events[next_event_index] = events.back();
-        events.pop_back();
-
-        if (events.empty())
-        {
             next_event_timestamp = std::numeric_limits<std::uint64_t>::max();
-        }
-        else
-        {
             find_next_event();
         }
     }
@@ -50,6 +51,11 @@ class Scheduler
     void tick()
     {
         timestamp += 1;
+    }
+
+    std::uint64_t ticks() const
+    {
+        return timestamp;
     }
 
   private:

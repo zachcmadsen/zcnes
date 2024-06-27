@@ -4,6 +4,7 @@
 #include <optional>
 
 #include "cart.hpp"
+#include "ppu.hpp"
 #include "scheduler.hpp"
 
 namespace zcnes
@@ -14,7 +15,7 @@ std::uint16_t mirror_ram_addr(std::uint16_t addr)
     return addr & 0x07FF;
 }
 
-Bus::Bus(Cart *cart, Scheduler *scheduler) : cart{cart}, scheduler{scheduler}
+Bus::Bus(Cart *cart, Ppu *ppu, Scheduler *scheduler) : cart{cart}, ppu{ppu}, scheduler{scheduler}
 {
 }
 
@@ -27,6 +28,10 @@ std::uint8_t Bus::read_byte(std::uint16_t addr)
     if (addr <= 0x1FFF)
     {
         data = ram[mirror_ram_addr(addr)];
+    }
+    else if (addr >= 0x2000 && addr <= 0x3FFF)
+    {
+        data = ppu->read(addr);
     }
     else if (addr >= 0x6000 && addr <= 0x7FFF)
     {
@@ -47,6 +52,10 @@ void Bus::write_byte(std::uint16_t addr, std::uint8_t data)
     if (addr <= 0x1FFF)
     {
         ram[mirror_ram_addr(addr)] = data;
+    }
+    else if (addr >= 0x2000 && addr <= 0x3FFF)
+    {
+        ppu->write(addr, data);
     }
     else if (addr >= 0x6000 && addr <= 0x7FFF)
     {

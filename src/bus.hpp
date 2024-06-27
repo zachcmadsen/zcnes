@@ -5,6 +5,7 @@
 #include <optional>
 
 #include "cart.hpp"
+#include "ppu.hpp"
 #include "scheduler.hpp"
 
 namespace zcnes
@@ -13,7 +14,7 @@ namespace zcnes
 class Bus
 {
   public:
-    explicit Bus(Cart *cart, Scheduler *scheduler);
+    explicit Bus(Cart *cart, Ppu *ppu, Scheduler *scheduler);
 
     std::uint8_t read_byte(std::uint16_t addr);
 
@@ -24,6 +25,7 @@ class Bus
   private:
     std::array<std::uint8_t, 0x800> ram{};
     Cart *cart;
+    Ppu *ppu;
 
     Scheduler *scheduler;
 };
