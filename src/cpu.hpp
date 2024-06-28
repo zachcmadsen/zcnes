@@ -36,13 +36,13 @@ template <Addressable T> class Cpu
     /// Executes an NMI.
     void nmi()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         push(pc >> 8);
         push(pc);
         push(std::bit_cast<std::uint8_t>(p));
         p.i = true;
-        const auto pc_low = bus->read_byte(nmi_vector);
-        const auto pc_high = bus->read_byte(nmi_vector + 1);
+        const auto pc_low = read_byte(nmi_vector);
+        const auto pc_high = read_byte(nmi_vector + 1);
         pc = combine(pc_high, pc_low);
     }
 
@@ -86,9 +86,19 @@ template <Addressable T> class Cpu
     // Track page boundary crossings for SHA, SHX, SHY, and SHS instructions.
     bool page_cross{false};
 
+    std::uint8_t read_byte(std::uint16_t addr)
+    {
+        return bus->read_byte(addr);
+    }
+
+    void write_byte(std::uint16_t addr, std::uint8_t data)
+    {
+        bus->write_byte(addr, data);
+    }
+
     std::uint8_t next_byte()
     {
-        const auto data = bus->read_byte(pc);
+        const auto data = read_byte(pc);
         pc += 1;
         return data;
     }
@@ -101,19 +111,19 @@ template <Addressable T> class Cpu
 
     void push(std::uint8_t data)
     {
-        bus->write_byte(stack_addr + s, data);
+        write_byte(stack_addr + s, data);
         s -= 1;
     }
 
     std::uint8_t pop()
     {
         s += 1;
-        return bus->read_byte(stack_addr + s);
+        return read_byte(stack_addr + s);
     }
 
     std::uint8_t peek()
     {
-        return bus->read_byte(stack_addr + s);
+        return read_byte(stack_addr + s);
     }
 
     void add(std::uint8_t data)
@@ -131,7 +141,7 @@ template <Addressable T> class Cpu
         const auto offset = next_byte();
         if (cond)
         {
-            bus->read_byte(pc);
+            read_byte(pc);
             const auto prev_pc = pc;
             pc += static_cast<std::int8_t>(offset);
             const auto crossed_page = (prev_pc & 0xFF00) != (pc & 0xFF00);
@@ -140,7 +150,7 @@ template <Addressable T> class Cpu
                 // TODO: Can this be simplified?
                 const auto low = static_cast<std::uint8_t>(prev_pc + offset);
                 const auto high = static_cast<std::uint8_t>(prev_pc >> 8);
-                bus->read_byte(combine(high, low));
+                read_byte(combine(high, low));
             }
         }
     }
@@ -164,7 +174,7 @@ template <Addressable T> class Cpu
         std::uint8_t high = addr >> 8;
         data &= high + static_cast<std::uint8_t>(!page_cross);
         high = page_cross ? data : high;
-        bus->write_byte(combine(high, low), data);
+        write_byte(combine(high, low), data);
     }
 
     void abs()
@@ -181,7 +191,7 @@ template <Addressable T> class Cpu
         const auto high = next_byte();
         if (write || overflow)
         {
-            bus->read_byte(combine(high, low));
+            read_byte(combine(high, low));
         }
         addr = combine(high + overflow, low);
         page_cross = overflow;
@@ -194,7 +204,7 @@ template <Addressable T> class Cpu
         const auto high = next_byte();
         if (write || overflow)
         {
-            bus->read_byte(combine(high, low));
+            read_byte(combine(high, low));
         }
         addr = combine(high + overflow, low);
         page_cross = overflow;
@@ -203,24 +213,24 @@ template <Addressable T> class Cpu
     void idx()
     {
         auto ptr = next_byte();
-        bus->read_byte(ptr);
+        read_byte(ptr);
         ptr += x;
-        const auto low = bus->read_byte(ptr);
+        const auto low = read_byte(ptr);
         ptr += 1;
-        const auto high = bus->read_byte(ptr);
+        const auto high = read_byte(ptr);
         addr = combine(high, low);
     }
 
     template <bool write> void idy()
     {
         auto ptr = next_byte();
-        auto low = bus->read_byte(ptr);
+        auto low = read_byte(ptr);
         ptr += 1;
-        const auto high = bus->read_byte(ptr);
+        const auto high = read_byte(ptr);
         const auto overflow = overflowing_add(low, y, &low);
         if (write || overflow)
         {
-            bus->read_byte(combine(high, low));
+            read_byte(combine(high, low));
         }
         addr = combine(high + overflow, low);
         page_cross = overflow;
@@ -242,8 +252,8 @@ template <Addressable T> class Cpu
     {
         const auto ptr_low = next_byte();
         const auto ptr_high = next_byte();
-        const auto low = bus->read_byte(combine(ptr_high, ptr_low));
-        const auto high = bus->read_byte(combine(ptr_high, ptr_low + 1));
+        const auto low = read_byte(combine(ptr_high, ptr_low));
+        const auto high = read_byte(combine(ptr_high, ptr_low + 1));
         addr = combine(high, low);
     }
 
@@ -255,7 +265,7 @@ template <Addressable T> class Cpu
     void zpx()
     {
         auto addr = next_byte();
-        bus->read_byte(addr);
+        read_byte(addr);
         addr += x;
         this->addr = addr;
     }
@@ -263,20 +273,20 @@ template <Addressable T> class Cpu
     void zpy()
     {
         auto addr = next_byte();
-        bus->read_byte(addr);
+        read_byte(addr);
         addr += y;
         this->addr = addr;
     }
 
     void adc()
     {
-        const auto data = bus->read_byte(addr);
+        const auto data = read_byte(addr);
         add(data);
     }
 
     void alr()
     {
-        a &= bus->read_byte(addr);
+        a &= read_byte(addr);
         const auto carry = lsb(a);
         a >>= 1;
         p.c = carry;
@@ -285,14 +295,14 @@ template <Addressable T> class Cpu
 
     void anc()
     {
-        a &= bus->read_byte(addr);
+        a &= read_byte(addr);
         p.c = msb(a);
         set_z_and_n(a);
     }
 
     void and_()
     {
-        a &= bus->read_byte(addr);
+        a &= read_byte(addr);
         set_z_and_n(a);
     }
 
@@ -302,7 +312,7 @@ template <Addressable T> class Cpu
 
     void arr()
     {
-        a &= bus->read_byte(addr);
+        a &= read_byte(addr);
         a >>= 1;
         a |= p.c << 7;
         p.c = zcnes::bit<6>(a);
@@ -312,18 +322,18 @@ template <Addressable T> class Cpu
 
     void asl()
     {
-        auto data = bus->read_byte(addr);
-        bus->write_byte(addr, data);
+        auto data = read_byte(addr);
+        write_byte(addr, data);
         const auto carry = msb(data);
         data <<= 1;
-        bus->write_byte(addr, data);
+        write_byte(addr, data);
         p.c = carry;
         set_z_and_n(data);
     }
 
     void asl_a()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         const auto carry = msb(a);
         a <<= 1;
         p.c = carry;
@@ -347,7 +357,7 @@ template <Addressable T> class Cpu
 
     void bit()
     {
-        const auto data = bus->read_byte(addr);
+        const auto data = read_byte(addr);
         p.z = !(data & a);
         p.v = zcnes::bit<6>(data);
         p.n = msb(data);
@@ -376,8 +386,8 @@ template <Addressable T> class Cpu
         // Push P with the B flag set.
         push(std::bit_cast<std::uint8_t>(p) | 1 << 4);
         p.i = true;
-        const auto pc_low = bus->read_byte(irq_vector);
-        const auto pc_high = bus->read_byte(irq_vector + 1);
+        const auto pc_low = read_byte(irq_vector);
+        const auto pc_high = read_byte(irq_vector + 1);
         pc = combine(pc_high, pc_low);
     }
 
@@ -393,113 +403,113 @@ template <Addressable T> class Cpu
 
     void clc()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         p.c = false;
     }
 
     void cld()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         p.d = false;
     }
 
     void cli()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         p.i = false;
     }
 
     void clv()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         p.v = false;
     }
 
     void cmp()
     {
-        const auto data = bus->read_byte(addr);
+        const auto data = read_byte(addr);
         compare(a, data);
     }
 
     void cpx()
     {
-        const auto data = bus->read_byte(addr);
+        const auto data = read_byte(addr);
         compare(x, data);
     }
 
     void cpy()
     {
-        const auto data = bus->read_byte(addr);
+        const auto data = read_byte(addr);
         compare(y, data);
     }
 
     void dcp()
     {
-        auto data = bus->read_byte(addr);
-        bus->write_byte(addr, data);
+        auto data = read_byte(addr);
+        write_byte(addr, data);
         data -= 1;
-        bus->write_byte(addr, data);
+        write_byte(addr, data);
         compare(a, data);
     }
 
     void dec()
     {
-        auto data = bus->read_byte(addr);
-        bus->write_byte(addr, data);
+        auto data = read_byte(addr);
+        write_byte(addr, data);
         data -= 1;
-        bus->write_byte(addr, data);
+        write_byte(addr, data);
         set_z_and_n(data);
     }
 
     void dex()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         x -= 1;
         set_z_and_n(x);
     }
 
     void dey()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         y -= 1;
         set_z_and_n(y);
     }
 
     void eor()
     {
-        a ^= bus->read_byte(addr);
+        a ^= read_byte(addr);
         set_z_and_n(a);
     }
 
     void inc()
     {
-        auto data = bus->read_byte(addr);
-        bus->write_byte(addr, data);
+        auto data = read_byte(addr);
+        write_byte(addr, data);
         data += 1;
-        bus->write_byte(addr, data);
+        write_byte(addr, data);
         set_z_and_n(data);
     }
 
     void inx()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         x += 1;
         set_z_and_n(x);
     }
 
     void iny()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         y += 1;
         set_z_and_n(y);
     }
 
     void isc()
     {
-        auto data = bus->read_byte(addr);
-        bus->write_byte(addr, data);
+        auto data = read_byte(addr);
+        write_byte(addr, data);
         data += 1;
-        bus->write_byte(addr, data);
+        write_byte(addr, data);
         add(data ^ 0xFF);
     }
 
@@ -524,7 +534,7 @@ template <Addressable T> class Cpu
 
     void las()
     {
-        a = bus->read_byte(addr) & s;
+        a = read_byte(addr) & s;
         x = a;
         s = a;
         set_z_and_n(a);
@@ -532,43 +542,43 @@ template <Addressable T> class Cpu
 
     void lax()
     {
-        a = bus->read_byte(addr);
+        a = read_byte(addr);
         x = a;
         set_z_and_n(a);
     }
 
     void lda()
     {
-        a = bus->read_byte(addr);
+        a = read_byte(addr);
         set_z_and_n(a);
     }
 
     void ldx()
     {
-        x = bus->read_byte(addr);
+        x = read_byte(addr);
         set_z_and_n(x);
     }
 
     void ldy()
     {
-        y = bus->read_byte(addr);
+        y = read_byte(addr);
         set_z_and_n(y);
     }
 
     void lsr()
     {
-        auto data = bus->read_byte(addr);
-        bus->write_byte(addr, data);
+        auto data = read_byte(addr);
+        write_byte(addr, data);
         const auto carry = lsb(data);
         data >>= 1;
-        bus->write_byte(addr, data);
+        write_byte(addr, data);
         p.c = carry;
         set_z_and_n(data);
     }
 
     void lsr_a()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         const auto carry = lsb(a);
         a >>= 1;
         p.c = carry;
@@ -578,38 +588,38 @@ template <Addressable T> class Cpu
     void lxa()
     {
         // Store 0xFF & operand in A and X.
-        a = bus->read_byte(addr);
+        a = read_byte(addr);
         x = a;
         set_z_and_n(a);
     }
 
     void nop()
     {
-        bus->read_byte(addr);
+        read_byte(addr);
     }
 
     void ora()
     {
-        a |= bus->read_byte(addr);
+        a |= read_byte(addr);
         set_z_and_n(a);
     }
 
     void pha()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         push(a);
     }
 
     void php()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         // Push P with the B and U flags set.
         push(std::bit_cast<std::uint8_t>(p) | 1 << 5 | 1 << 4);
     }
 
     void pla()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         peek();
         a = pop();
         set_z_and_n(a);
@@ -617,7 +627,7 @@ template <Addressable T> class Cpu
 
     void plp()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         peek();
         auto new_p = std::bit_cast<Status>(pop());
         new_p.b = p.b;
@@ -627,12 +637,12 @@ template <Addressable T> class Cpu
 
     void rla()
     {
-        auto data = bus->read_byte(addr);
-        bus->write_byte(addr, data);
+        auto data = read_byte(addr);
+        write_byte(addr, data);
         const auto carry = msb(data);
         data <<= 1;
         data |= p.c;
-        bus->write_byte(addr, data);
+        write_byte(addr, data);
         a &= data;
         p.c = carry;
         set_z_and_n(a);
@@ -640,19 +650,19 @@ template <Addressable T> class Cpu
 
     void rol()
     {
-        auto data = bus->read_byte(addr);
-        bus->write_byte(addr, data);
+        auto data = read_byte(addr);
+        write_byte(addr, data);
         const auto carry = msb(data);
         data <<= 1;
         data |= p.c;
-        bus->write_byte(addr, data);
+        write_byte(addr, data);
         p.c = carry;
         set_z_and_n(data);
     }
 
     void rol_a()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         const auto carry = msb(a);
         a <<= 1;
         a |= p.c;
@@ -662,19 +672,19 @@ template <Addressable T> class Cpu
 
     void ror()
     {
-        auto data = bus->read_byte(addr);
-        bus->write_byte(addr, data);
+        auto data = read_byte(addr);
+        write_byte(addr, data);
         const auto carry = lsb(data);
         data >>= 1;
         data |= p.c << 7;
-        bus->write_byte(addr, data);
+        write_byte(addr, data);
         p.c = carry;
         set_z_and_n(data);
     }
 
     void ror_a()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         const auto carry = lsb(a);
         a >>= 1;
         a |= p.c << 7;
@@ -684,19 +694,19 @@ template <Addressable T> class Cpu
 
     void rra()
     {
-        auto data = bus->read_byte(addr);
-        bus->write_byte(addr, data);
+        auto data = read_byte(addr);
+        write_byte(addr, data);
         const auto carry = lsb(data);
         data >>= 1;
         data |= p.c << 7;
-        bus->write_byte(addr, data);
+        write_byte(addr, data);
         p.c = carry;
         add(data);
     }
 
     void rti()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         peek();
         auto new_p = std::bit_cast<Status>(pop());
         new_p.b = p.b;
@@ -709,7 +719,7 @@ template <Addressable T> class Cpu
 
     void rts()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         peek();
         const auto pc_low = pop();
         const auto pc_high = pop();
@@ -719,18 +729,18 @@ template <Addressable T> class Cpu
 
     void sax()
     {
-        bus->write_byte(addr, a & x);
+        write_byte(addr, a & x);
     }
 
     void sbc()
     {
-        const auto data = bus->read_byte(addr);
+        const auto data = read_byte(addr);
         add(data ^ 0xFF);
     }
 
     void sbx()
     {
-        const auto data = bus->read_byte(addr);
+        const auto data = read_byte(addr);
         const auto overflow = overflowing_sub(a & x, data, &x);
         p.c = !overflow;
         set_z_and_n(x);
@@ -738,19 +748,19 @@ template <Addressable T> class Cpu
 
     void sec()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         p.c = true;
     }
 
     void sed()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         p.d = true;
     }
 
     void sei()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         p.i = true;
     }
 
@@ -771,11 +781,11 @@ template <Addressable T> class Cpu
 
     void slo()
     {
-        auto data = bus->read_byte(addr);
-        bus->write_byte(addr, data);
+        auto data = read_byte(addr);
+        write_byte(addr, data);
         const auto carry = msb(data);
         data <<= 1;
-        bus->write_byte(addr, data);
+        write_byte(addr, data);
         a |= data;
         p.c = carry;
         set_z_and_n(a);
@@ -783,11 +793,11 @@ template <Addressable T> class Cpu
 
     void sre()
     {
-        auto data = bus->read_byte(addr);
-        bus->write_byte(addr, data);
+        auto data = read_byte(addr);
+        write_byte(addr, data);
         const auto carry = lsb(data);
         data >>= 1;
-        bus->write_byte(addr, data);
+        write_byte(addr, data);
         a ^= data;
         p.c = carry;
         set_z_and_n(a);
@@ -795,17 +805,17 @@ template <Addressable T> class Cpu
 
     void sta()
     {
-        bus->write_byte(addr, a);
+        write_byte(addr, a);
     }
 
     void stx()
     {
-        bus->write_byte(addr, x);
+        write_byte(addr, x);
     }
 
     void sty()
     {
-        bus->write_byte(addr, y);
+        write_byte(addr, y);
     }
 
     void shs()
@@ -816,41 +826,41 @@ template <Addressable T> class Cpu
 
     void tax()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         x = a;
         set_z_and_n(x);
     }
 
     void tay()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         y = a;
         set_z_and_n(y);
     }
 
     void tsx()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         x = s;
         set_z_and_n(x);
     }
 
     void txa()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         a = x;
         set_z_and_n(a);
     }
 
     void txs()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         s = x;
     }
 
     void tya()
     {
-        bus->read_byte(pc);
+        read_byte(pc);
         a = y;
         set_z_and_n(a);
     }
@@ -1115,7 +1125,7 @@ template <Addressable T> inline void Cpu<T>::step()
 
 template <Addressable T> inline void Cpu<T>::reset()
 {
-    bus->read_byte(pc);
+    read_byte(pc);
     peek();
     s -= 1;
     peek();
@@ -1123,8 +1133,8 @@ template <Addressable T> inline void Cpu<T>::reset()
     peek();
     s -= 1;
     p.i = true;
-    const auto pc_low = bus->read_byte(reset_vector);
-    const auto pc_high = bus->read_byte(reset_vector + 1);
+    const auto pc_low = read_byte(reset_vector);
+    const auto pc_high = read_byte(reset_vector + 1);
     pc = combine(pc_high, pc_low);
 }
 
