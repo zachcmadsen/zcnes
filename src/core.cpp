@@ -1,42 +1,22 @@
 #include "core.hpp"
 
 #include <cstdint>
-#include <iostream>
 #include <memory>
 #include <optional>
 #include <span>
 
 #include <zcnes/core.hpp>
 
-#include "scheduler.hpp"
-
 namespace zcnes
 {
 
-Core::Core(std::span<const std::uint8_t> rom) : cart{rom}, ppu{&scheduler}, bus{&cart, &ppu, &scheduler}, cpu{&bus}
+Core::Core(std::span<const std::uint8_t> rom) : cart{rom}, bus{&cart, &ppu}, cpu{&bus}, ppu{&cpu}
 {
-    scheduler.add(0, EventKind::Reset);
-    scheduler.add(29781, EventKind::VBlank);
+    cpu.reset();
 }
 
 void Core::step()
 {
-    scheduler.check([this](EventKind event_kind) {
-        switch (event_kind)
-        {
-        case EventKind::Reset:
-            this->cpu.reset();
-            break;
-        case EventKind::Nmi:
-            this->cpu.nmi();
-            break;
-        case EventKind::VBlank:
-            this->ppu.run();
-            scheduler.add(29781, EventKind::VBlank);
-            break;
-        }
-    });
-
     cpu.step();
 }
 

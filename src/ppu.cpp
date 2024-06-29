@@ -3,38 +3,44 @@
 #include <bit>
 #include <cstdint>
 
-#include "scheduler.hpp"
+#include "bus.hpp"
+#include "cpu.hpp"
 
 namespace zcnes
 {
 
-Ppu::Ppu(Scheduler *scheduler) : scheduler{scheduler}
+constexpr std::uint64_t master_clock_divider = 4;
+
+Ppu::Ppu(Cpu<Bus> *cpu) : cpu{cpu}
 {
 }
 
-void Ppu::run()
+void Ppu::run(std::uint64_t cycles)
 {
-    const auto ticks = scheduler->ticks();
-    const auto ticks_to_run = (ticks - prev_ticks) * 3;
-    for (int i = 0; i < ticks_to_run; ++i)
+    while (master_clock + master_clock_divider <= cycles)
     {
         tick();
+        master_clock += master_clock_divider;
     }
-    prev_ticks = ticks;
 }
 
 std::uint8_t Ppu::read(std::uint16_t addr)
 {
-    run();
-
     switch (addr & 0x2007)
     {
     case 0x2002:
+        if (scanline == 241 && cycle == 1)
+        {
+            suppress_nmi = true;
+        }
+
         cpu_bus = std::bit_cast<std::uint8_t>(status) | (cpu_bus & 0x1F);
         status.vblank = false;
+        cpu->pull_nmi(false);
+
         break;
     default:
-        return 0;
+        break;
     }
 
     return cpu_bus;
@@ -42,8 +48,6 @@ std::uint8_t Ppu::read(std::uint16_t addr)
 
 void Ppu::write(std::uint16_t addr, std::uint8_t data)
 {
-    run();
-
     cpu_bus = data;
 
     switch (addr & 0x2007)
@@ -52,9 +56,13 @@ void Ppu::write(std::uint16_t addr, std::uint8_t data)
         const auto prev_ctrl = ctrl;
         ctrl = std::bit_cast<Ctrl>(data);
 
-        if (status.vblank && !prev_ctrl.nmi && ctrl.nmi)
+        if (!ctrl.nmi)
         {
-            scheduler->add(EventKind::Nmi);
+            cpu->pull_nmi(false);
+        }
+        else if (status.vblank && ctrl.nmi)
+        {
+            cpu->pull_nmi(true);
         }
         break;
     }
@@ -68,23 +76,27 @@ void Ppu::write(std::uint16_t addr, std::uint8_t data)
 
 void Ppu::tick()
 {
-    if (scanline == 261 && cycle == 1)
-    {
-        status.vblank = false;
-    }
-
     if (scanline == 241 && cycle == 1)
     {
-        status.vblank = true;
-        if (ctrl.nmi)
+        if (!suppress_nmi)
         {
-            scheduler->add(EventKind::Nmi);
+            status.vblank = true;
+            if (ctrl.nmi)
+            {
+                cpu->pull_nmi(true);
+            }
         }
+        suppress_nmi = false;
+    }
+    else if (scanline == 261 && cycle == 1)
+    {
+        status.vblank = false;
+        cpu->pull_nmi(false);
     }
 
-    if (scanline == 261 && cycle == 340)
+    if (scanline == 261 && cycle == 339)
     {
-        if (mask.show_bg && mask.show_sprites && !is_odd_frame)
+        if (is_odd_frame && rendering_enabled)
         {
             cycle += 1;
         }
@@ -96,6 +108,8 @@ void Ppu::tick()
     {
         scanline = (scanline + 1) % 262;
     }
+
+    rendering_enabled = mask.show_bg || mask.show_sprites;
 }
 
 } // namespace zcnes

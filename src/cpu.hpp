@@ -46,6 +46,11 @@ template <Addressable T> class Cpu
         pc = combine(pc_high, pc_low);
     }
 
+    void pull_nmi(bool val)
+    {
+        nmi_line = val;
+    }
+
   private:
     static constexpr std::uint16_t stack_addr = 0x0100;
 
@@ -86,14 +91,35 @@ template <Addressable T> class Cpu
     // Track page boundary crossings for SHA, SHX, SHY, and SHS instructions.
     bool page_cross{false};
 
+    bool nmi_line{false};
+
+    bool prev_nmi_line{false};
+
+    bool prev_need_nmi{false};
+    bool need_nmi{false};
+
+    void poll_nmi()
+    {
+        prev_need_nmi = need_nmi;
+
+        if (!prev_nmi_line && nmi_line)
+        {
+            need_nmi = true;
+        }
+        prev_nmi_line = nmi_line;
+    }
+
     std::uint8_t read_byte(std::uint16_t addr)
     {
-        return bus->read_byte(addr);
+        const auto data = bus->read_byte(addr);
+        poll_nmi();
+        return data;
     }
 
     void write_byte(std::uint16_t addr, std::uint8_t data)
     {
         bus->write_byte(addr, data);
+        poll_nmi();
     }
 
     std::uint8_t next_byte()
@@ -1121,6 +1147,12 @@ template <Addressable T> inline void Cpu<T>::step()
     case 0xFF: abx<write>(); isc();   break;
     }
     // clang-format on
+
+    if (prev_need_nmi)
+    {
+        need_nmi = false;
+        nmi();
+    }
 }
 
 template <Addressable T> inline void Cpu<T>::reset()

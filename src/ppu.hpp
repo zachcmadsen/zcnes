@@ -1,6 +1,7 @@
 #pragma once
 
-#include "scheduler.hpp"
+#include "bus.hpp"
+#include "cpu.hpp"
 #include <cstdint>
 
 namespace zcnes
@@ -9,9 +10,9 @@ namespace zcnes
 class Ppu
 {
   public:
-    explicit Ppu(Scheduler *scheduler);
+    explicit Ppu(Cpu<Bus> *cpu);
 
-    void run();
+    void run(std::uint64_t cycles);
 
     std::uint8_t read(std::uint16_t addr);
 
@@ -59,13 +60,19 @@ class Ppu
     int scanline{};
     int cycle{};
 
-    std::uint8_t cpu_bus{};
+    bool suppress_nmi{false};
 
-    Scheduler *scheduler;
+    std::uint64_t master_clock{};
+
+    std::uint8_t cpu_bus{};
 
     std::uint64_t prev_ticks{};
 
+    bool rendering_enabled{false};
+
     bool is_odd_frame{false};
+
+    Cpu<Bus> *cpu;
 
     void tick();
 };

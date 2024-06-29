@@ -5,23 +5,25 @@
 
 #include "cart.hpp"
 #include "ppu.hpp"
-#include "scheduler.hpp"
 
 namespace zcnes
 {
+
+constexpr std::uint64_t cpu_master_clock_divider = 12;
 
 std::uint16_t mirror_ram_addr(std::uint16_t addr)
 {
     return addr & 0x07FF;
 }
 
-Bus::Bus(Cart *cart, Ppu *ppu, Scheduler *scheduler) : cart{cart}, ppu{ppu}, scheduler{scheduler}
+Bus::Bus(Cart *cart, Ppu *ppu) : cart{cart}, ppu{ppu}
 {
 }
 
 std::uint8_t Bus::read_byte(std::uint16_t addr)
 {
-    scheduler->tick();
+    master_clock += cpu_master_clock_divider / 2;
+    ppu->run(master_clock);
 
     std::uint8_t data = 0;
 
@@ -42,12 +44,16 @@ std::uint8_t Bus::read_byte(std::uint16_t addr)
         data = cart->read_prg_rom(addr);
     }
 
+    master_clock += cpu_master_clock_divider / 2;
+    ppu->run(master_clock);
+
     return data;
 }
 
 void Bus::write_byte(std::uint16_t addr, std::uint8_t data)
 {
-    scheduler->tick();
+    master_clock += cpu_master_clock_divider / 2;
+    ppu->run(master_clock);
 
     if (addr <= 0x1FFF)
     {
@@ -61,6 +67,9 @@ void Bus::write_byte(std::uint16_t addr, std::uint8_t data)
     {
         cart->write_prg_ram(addr, data);
     }
+
+    master_clock += cpu_master_clock_divider / 2;
+    ppu->run(master_clock);
 }
 
 std::optional<std::uint8_t> Bus::peek_byte(std::uint16_t addr) const
