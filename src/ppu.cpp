@@ -2,6 +2,8 @@
 
 #include <bit>
 #include <cstdint>
+#include <format>
+#include <iostream>
 
 #include "bus.hpp"
 #include "cpu.hpp"
@@ -24,8 +26,10 @@ void Ppu::run(std::uint64_t cycles)
     }
 }
 
-std::uint8_t Ppu::read(std::uint16_t addr)
+std::uint8_t Ppu::read(std::uint16_t addr, std::uint64_t clocks)
 {
+    run(clocks);
+
     switch (addr & 0x2007)
     {
     case 0x2002:
@@ -46,8 +50,10 @@ std::uint8_t Ppu::read(std::uint16_t addr)
     return cpu_bus;
 }
 
-void Ppu::write(std::uint16_t addr, std::uint8_t data)
+void Ppu::write(std::uint16_t addr, std::uint8_t data, std::uint64_t clocks)
 {
+    run(clocks);
+
     cpu_bus = data;
 
     switch (addr & 0x2007)
@@ -78,6 +84,8 @@ void Ppu::tick()
 {
     if (scanline == 241 && cycle == 1)
     {
+        std::cout << std::format("actual vblank event at {}\n", master_clock);
+
         if (!suppress_nmi)
         {
             status.vblank = true;

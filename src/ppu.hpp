@@ -14,9 +14,9 @@ class Ppu
 
     void run(std::uint64_t cycles);
 
-    std::uint8_t read(std::uint16_t addr);
+    std::uint8_t read(std::uint16_t addr, std::uint64_t clocks);
 
-    void write(std::uint16_t addr, std::uint8_t data);
+    void write(std::uint16_t addr, std::uint8_t data, std::uint64_t clocks);
 
   private:
     struct Ctrl
