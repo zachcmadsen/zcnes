@@ -54,7 +54,7 @@ struct ProcessorTest
 struct ProcessorTestBus
 {
     std::array<std::uint8_t, addr_space_size> ram{};
-    cista::offset::vector<BusState> cycles{};
+    cista::offset::vector<BusState> cycles;
 
     std::uint8_t read_byte(std::uint16_t addr)
     {
