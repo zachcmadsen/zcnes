@@ -4,7 +4,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <exception>
-#include <filesystem>
 #include <iostream>
 #include <span>
 
@@ -71,9 +70,9 @@ struct ProcessorTestBus
     }
 };
 
-void run(const std::filesystem::path &path)
+void run(const char *path)
 {
-    const auto buf = cista::mmap(path.c_str(), cista::mmap::protection::READ);
+    const auto buf = cista::mmap(path, cista::mmap::protection::READ);
     const auto *tests = cista::deserialize<cista::offset::vector<ProcessorTest>>(buf);
 
     ProcessorTestBus bus{};
@@ -118,10 +117,9 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    const std::filesystem::path path{args[1]};
-
     try
     {
+        const auto *path = args[1];
         run(path);
     }
     catch (const std::exception &e)
