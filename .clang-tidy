@@ -1,5 +1,6 @@
 Checks: >
   -*,
+  clang-analyzer-*,
   bugprone-*,
   cppcoreguidelines-*,
   google-*,
@@ -12,6 +13,7 @@ Checks: >
   -modernize-use-trailing-return-type,
   -readability-identifier-length,
   -readability-magic-numbers,
+  -readability-suspicious-call-argument,
 HeaderFileExtensions: ['hpp']
 ImplementationFileExtensions: ['cpp']
 CheckOptions:
