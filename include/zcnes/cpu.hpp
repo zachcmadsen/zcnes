@@ -745,7 +745,7 @@ template <Addressable T> class Cpu
         write_byte(addr, data);
         const auto carry = detail::msb(data);
         data <<= 1;
-        data |= p.c;
+        data |= static_cast<std::uint8_t>(p.c);
         write_byte(addr, data);
         a &= data;
         p.c = carry;
@@ -758,7 +758,7 @@ template <Addressable T> class Cpu
         write_byte(addr, data);
         const auto carry = detail::msb(data);
         data <<= 1;
-        data |= p.c;
+        data |= static_cast<std::uint8_t>(p.c);
         write_byte(addr, data);
         p.c = carry;
         set_z_and_n(data);
@@ -769,7 +769,7 @@ template <Addressable T> class Cpu
         read_byte(pc);
         const auto carry = detail::msb(a);
         a <<= 1;
-        a |= p.c;
+        a |= static_cast<std::uint8_t>(p.c);
         p.c = carry;
         set_z_and_n(a);
     }
