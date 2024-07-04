@@ -13,12 +13,18 @@ namespace zcnes
 /// A type that can be addressed to read and write bytes.
 template <typename T>
 concept Addressable = requires(T t, std::uint16_t addr, std::uint8_t data) {
-    {
-        t.read_byte(addr)
-    } -> std::same_as<std::uint8_t>;
-    {
-        t.write_byte(addr, data)
-    } -> std::same_as<void>;
+    { t.read_byte(addr) } -> std::same_as<std::uint8_t>;
+    { t.write_byte(addr, data) } -> std::same_as<void>;
+};
+
+struct CpuState
+{
+    std::uint16_t pc{};
+    std::uint8_t a{};
+    std::uint8_t x{};
+    std::uint8_t y{};
+    std::uint8_t s{};
+    std::uint8_t p{};
 };
 
 /// A Ricoh 6502 emulator.
@@ -51,6 +57,26 @@ template <Addressable T> class Cpu
         nmi_line = val;
     }
 
+    void load_state(const CpuState &state)
+    {
+        pc = state.pc;
+        a = state.a;
+        x = state.x;
+        y = state.y;
+        s = state.s;
+        p = std::bit_cast<Status>(state.p);
+    }
+
+    void save_state(CpuState &state) const
+    {
+        state.pc = pc;
+        state.a = a;
+        state.x = x;
+        state.y = y;
+        state.s = s;
+        state.p = std::bit_cast<std::uint8_t>(p);
+    }
+
   private:
     static constexpr std::uint16_t stack_addr = 0x0100;
 
@@ -58,10 +84,6 @@ template <Addressable T> class Cpu
     static constexpr std::uint16_t reset_vector = 0xFFFC;
     static constexpr std::uint16_t irq_vector = 0xFFFE;
 
-// Register members need to be public for single step tests.
-#ifdef ZCNES_SINGLE_STEP_TESTS
-  public:
-#endif
     struct Status
     {
         bool c : 1;
@@ -81,9 +103,6 @@ template <Addressable T> class Cpu
     std::uint8_t y{0};
     std::uint8_t s{0xFD};
     Status p{false, false, true, false, false, true, false, false};
-#ifdef ZCNES_SINGLE_STEP_TESTS
-  private:
-#endif
 
     T *bus;
 

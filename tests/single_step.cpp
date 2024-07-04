@@ -11,7 +11,6 @@
 #include <cista/containers/vector.h>
 #include <cista/mmap.h>
 #include <cista/serialization.h>
-#define ZCNES_SINGLE_STEP_TESTS
 #include <cpu.hpp>
 
 #include "util.hpp"
@@ -80,12 +79,14 @@ void run(const char *path)
 
     for (const auto &test : *tests)
     {
-        cpu.pc = test.initial.pc;
-        cpu.s = test.initial.s;
-        cpu.a = test.initial.a;
-        cpu.x = test.initial.x;
-        cpu.y = test.initial.y;
-        cpu.p = std::bit_cast<zcnes::Cpu<ProcessorTestBus>::Status>(test.initial.p);
+
+        zcnes::CpuState state{.pc = test.initial.pc,
+                              .a = test.initial.a,
+                              .x = test.initial.x,
+                              .y = test.initial.y,
+                              .s = test.initial.s,
+                              .p = test.initial.p};
+        cpu.load_state(state);
         for (const auto &[addr, data] : test.initial.ram)
         {
             bus.ram.at(addr) = data;
@@ -94,12 +95,13 @@ void run(const char *path)
 
         cpu.step();
 
-        zcnes_assert(cpu.pc == test.final.pc);
-        zcnes_assert(cpu.s == test.final.s);
-        zcnes_assert(cpu.a == test.final.a);
-        zcnes_assert(cpu.x == test.final.x);
-        zcnes_assert(cpu.y == test.final.y);
-        zcnes_assert(std::bit_cast<std::uint8_t>(cpu.p) == test.final.p);
+        cpu.save_state(state);
+        zcnes_assert(state.pc == test.final.pc);
+        zcnes_assert(state.s == test.final.s);
+        zcnes_assert(state.a == test.final.a);
+        zcnes_assert(state.x == test.final.x);
+        zcnes_assert(state.y == test.final.y);
+        zcnes_assert(std::bit_cast<std::uint8_t>(state.p) == test.final.p);
         for (const auto &[addr, data] : test.final.ram)
         {
             zcnes_assert(bus.ram.at(addr) == data);
