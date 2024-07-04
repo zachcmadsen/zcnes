@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  linux:
+  build:
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -18,8 +18,8 @@ jobs:
           - c_compiler: "gcc-14"
             cxx_compiler: "g++-14"
             os: ubuntu-24.04
-          - c_compiler: "cl.exe"
-            cxx_compiler: "cl.exe"
+          - c_compiler: "cl"
+            cxx_compiler: "cl"
             os: windows-latest
 
     steps:
@@ -36,10 +36,10 @@ jobs:
           echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
 
       - name: Configure
-        run: cmake -S . -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CONFIGURATION_TYPES=Release -DCMAKE_C_COMPILER=${{matrix.c_compiler}} -DCMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }} 
+        run: cmake -S . -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${{matrix.c_compiler}} -DCMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }} 
 
       - name: Build
-        run: cmake --build build --config Release
+        run: cmake --build build
 
       - name: Test
         run: ctest --test-dir build --output-on-failure -j 2
