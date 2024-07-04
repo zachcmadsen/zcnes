@@ -4,8 +4,8 @@
 #include <optional>
 #include <span>
 
-#include <zcnes/core.hpp>
-#include <zcnes/cpu.hpp>
+#include <core/core.hpp>
+#include <cpu/cpu.hpp>
 
 #include "bus.hpp"
 #include "cart.hpp"

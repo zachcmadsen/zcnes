@@ -5,7 +5,7 @@
 #include <optional>
 #include <span>
 
-#include <zcnes/core.hpp>
+#include <core/core.hpp>
 
 namespace zcnes
 {

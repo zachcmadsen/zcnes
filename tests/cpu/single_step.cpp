@@ -5,15 +5,25 @@
 #include <cstdlib>
 #include <exception>
 #include <iostream>
+#include <source_location>
 #include <span>
+#include <stdexcept>
+#include <string>
 
 #include <cista/containers/string.h>
 #include <cista/containers/vector.h>
 #include <cista/mmap.h>
 #include <cista/serialization.h>
-#include <zcnes/cpu.hpp>
+#include <cpu/cpu.hpp>
 
-#include "util.hpp"
+constexpr void zcnes_assert(bool condition, const std::source_location location = std::source_location::current())
+{
+    if (!condition)
+    {
+        throw std::runtime_error("assertion failed at " + std::string{location.file_name()} + ":" +
+                                 std::to_string(location.line()) + ":" + std::to_string(location.column()));
+    }
+}
 
 constexpr std::size_t addr_space_size = 0x10000;
 

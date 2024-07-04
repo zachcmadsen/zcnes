@@ -8,13 +8,22 @@
 #include <iostream>
 #include <iterator>
 #include <memory>
+#include <source_location>
 #include <span>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
-#include <zcnes/core.hpp>
+#include <core/core.hpp>
 
-#include "util.hpp"
+constexpr void zcnes_assert(bool condition, const std::source_location location = std::source_location::current())
+{
+    if (!condition)
+    {
+        throw std::runtime_error("assertion failed at " + std::string{location.file_name()} + ":" +
+                                 std::to_string(location.line()) + ":" + std::to_string(location.column()));
+    }
+}
 
 constexpr std::uint16_t status_addr = 0x6000;
 constexpr std::uint16_t output_addr = 0x6004;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <zcnes/cpu.hpp>
+#include <cpu/cpu.hpp>
 
 #include "bus.hpp"
 #include <cstdint>

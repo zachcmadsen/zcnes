@@ -3,7 +3,7 @@
 #include <bit>
 #include <cstdint>
 
-#include <zcnes/cpu.hpp>
+#include <cpu/cpu.hpp>
 
 #include "bus.hpp"
 
