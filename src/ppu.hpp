@@ -1,7 +1,8 @@
 #pragma once
 
+#include <zcnes/cpu.hpp>
+
 #include "bus.hpp"
-#include "cpu.hpp"
 #include <cstdint>
 
 namespace zcnes

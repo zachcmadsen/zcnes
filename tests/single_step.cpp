@@ -11,7 +11,7 @@
 #include <cista/containers/vector.h>
 #include <cista/mmap.h>
 #include <cista/serialization.h>
-#include <cpu.hpp>
+#include <zcnes/cpu.hpp>
 
 #include "util.hpp"
 
