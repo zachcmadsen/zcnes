@@ -6,9 +6,13 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+option(ZCNES_BUILD_TESTS "Build ZCNES tests" ON)
+
 add_subdirectory(src/core)
 add_subdirectory(src/cpu)
 
-include(CTest)
-enable_testing()
-add_subdirectory(tests)
+if (ZCNES_BUILD_TESTS)
+  include(CTest)
+  enable_testing()
+  add_subdirectory(tests)
+endif()
