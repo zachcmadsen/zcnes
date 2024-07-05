@@ -103,7 +103,7 @@ template <Addressable T> class Cpu
     {
         read_byte(pc);
         push(pc >> 8);
-        push(pc);
+        push(static_cast<std::uint8_t>(pc));
         push(std::bit_cast<std::uint8_t>(p));
         p.i = true;
         const auto pc_low = read_byte(nmi_vector);

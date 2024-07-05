@@ -54,7 +54,6 @@ void Ppu::write(std::uint16_t addr, std::uint8_t data)
     switch (addr & 0x2007)
     {
     case 0x2000: {
-        const auto prev_ctrl = ctrl;
         ctrl = std::bit_cast<Ctrl>(data);
 
         if (!ctrl.nmi)

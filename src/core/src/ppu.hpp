@@ -56,7 +56,7 @@ class Ppu
 
     Ctrl ctrl{};
     Mask mask{};
-    Status status{.sprite_overflow = true, .vblank = true};
+    Status status{.sprite_overflow = true, .sprite_0_hit = false, .vblank = true};
 
     int scanline{};
     int cycle{};
@@ -66,8 +66,6 @@ class Ppu
     std::uint64_t master_clock{};
 
     std::uint8_t cpu_bus{};
-
-    std::uint64_t prev_ticks{};
 
     bool rendering_enabled{false};
 

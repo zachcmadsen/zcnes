@@ -9,8 +9,8 @@
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_C_COMPILER": "clang",
                 "CMAKE_CXX_COMPILER": "clang++",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "ZCNES_CXX_FLAGS": "-Wall -pedantic -Wextra -Wconversion -Wsign-conversion"
+                "CMAKE_CXX_FLAGS": "-Wall -pedantic -Wextra -Wconversion -Wsign-conversion",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
             }
         }
     ]
