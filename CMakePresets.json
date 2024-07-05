@@ -2,48 +2,15 @@
     "version": 3,
     "configurePresets": [
         {
-            "name": "flags-linux",
-            "hidden": true,
-            "cacheVariables": {
-                "ZCNES_CXX_FLAGS": "-Wall -Wextra -Wconversion -Wsign-conversion -pedantic-errors"
-            }
-        },
-        {
             "name": "dev",
-            "inherits": [
-                "flags-linux"
-            ],
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_C_COMPILER": "clang",
                 "CMAKE_CXX_COMPILER": "clang++",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
-            }
-        },
-        {
-            "name": "ci-linux",
-            "inherits": [
-                "flags-linux"
-            ],
-            "generator": "Ninja",
-            "binaryDir": "${sourceDir}/build",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_C_COMPILER": "clang-17",
-                "CMAKE_CXX_COMPILER": "clang++-17",
-                "CMAKE_CXX_FLAGS": "-fsanitize=address"
-            }
-        },
-        {
-            "name": "ci-windows",
-            "generator": "Visual Studio 17 2022",
-            "binaryDir": "${sourceDir}/build",
-            "architecture": "x64",
-            "cacheVariables": {
-                "CMAKE_CONFIGURATION_TYPES": "Release",
-                "ZCNES_CXX_FLAGS": "/W4"
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "ZCNES_CXX_FLAGS": "-Wall -pedantic -Wextra -Wconversion -Wsign-conversion"
             }
         }
     ]
