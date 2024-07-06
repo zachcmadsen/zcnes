@@ -10,7 +10,7 @@ FetchContent_MakeAvailable(cista)
 
 add_executable(single-step)
 target_sources(single-step PRIVATE single_step.cpp)
-target_link_libraries(single-step PRIVATE cista cpu)
+target_link_libraries(single-step PRIVATE cista common cpu)
 # Single step tests are too slow without some optimizations.
 target_compile_options(single-step PRIVATE "$<$<CONFIG:Debug>:-O1>")
 

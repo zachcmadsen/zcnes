@@ -1,7 +1,7 @@
 add_executable(blargg)
 target_sources(blargg PRIVATE blargg.cpp)
 target_include_directories(blargg PRIVATE .)
-target_link_libraries(blargg PRIVATE core)
+target_link_libraries(blargg PRIVATE common core)
 
 function(add_blargg_test TEST_NAME)
   file(GLOB TEST_FILES "${zcnes-tests_SOURCE_DIR}/${TEST_NAME}/*.nes")

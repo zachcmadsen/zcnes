@@ -24,7 +24,7 @@ class Cart
     static constexpr std::size_t prg_ram_size = 8192;
 
     std::array<std::uint8_t, prg_ram_size> prg_ram{};
-    std::vector<std::uint8_t> prg_rom{};
+    std::vector<std::uint8_t> prg_rom;
 };
 
 } // namespace zcnes

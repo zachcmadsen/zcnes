@@ -8,5 +8,6 @@ FetchContent_Declare(
 message(STATUS "Fetching zcnes-tests...")
 FetchContent_MakeAvailable(zcnes-tests)
 
+add_subdirectory(common)
 add_subdirectory(core)
 add_subdirectory(cpu)

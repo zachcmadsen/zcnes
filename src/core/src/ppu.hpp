@@ -1,9 +1,10 @@
 #pragma once
 
+#include <cstdint>
+
 #include <cpu/cpu.hpp>
 
 #include "bus.hpp"
-#include <cstdint>
 
 namespace zcnes
 {
@@ -13,7 +14,7 @@ class Ppu
   public:
     explicit Ppu(Cpu<Bus> *cpu);
 
-    void run(std::uint64_t cycles);
+    void run(std::uint64_t cpu_master_clock);
 
     std::uint8_t read(std::uint16_t addr);
 
@@ -57,19 +58,16 @@ class Ppu
     Ctrl ctrl{};
     Mask mask{};
     Status status{.sprite_overflow = true, .sprite_0_hit = false, .vblank = true};
+    std::uint8_t open_bus{};
 
     int scanline{};
     int cycle{};
 
-    bool suppress_nmi{false};
-
     std::uint64_t master_clock{};
 
-    std::uint8_t cpu_bus{};
-
-    bool rendering_enabled{false};
-
     bool is_odd_frame{false};
+    bool rendering_enabled{false};
+    bool suppress_nmi{false};
 
     Cpu<Bus> *cpu;
 

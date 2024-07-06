@@ -2,37 +2,27 @@
 #include <cstdint>
 #include <cstdlib>
 #include <exception>
-#include <filesystem>
 #include <fstream>
 #include <ios>
 #include <iostream>
 #include <iterator>
 #include <memory>
-#include <source_location>
 #include <span>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
+#include <common/common.h>
 #include <core/core.hpp>
 
-constexpr void zcnes_assert(bool condition, const std::source_location location = std::source_location::current())
-{
-    if (!condition)
-    {
-        throw std::runtime_error("assertion failed at " + std::string{location.file_name()} + ":" +
-                                 std::to_string(location.line()) + ":" + std::to_string(location.column()));
-    }
-}
 
 constexpr std::uint16_t status_addr = 0x6000;
 constexpr std::uint16_t output_addr = 0x6004;
 constexpr std::uint8_t running_status = 0x80;
 
-void run(const std::filesystem::path &path)
+void run(const char *path)
 {
     std::ifstream ifs{path, std::ios::binary};
-    zcnes_assert(ifs.is_open());
+    require(ifs.is_open());
     const std::vector<std::uint8_t> rom{std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
 
     auto core = zcnes::make_core(rom);
@@ -61,7 +51,12 @@ void run(const std::filesystem::path &path)
     }
 
     std::string str{output.begin(), output.end()};
-    zcnes_assert(str.find("Passed") != std::string::npos);
+    const auto passed = str.find("Passed") != std::string::npos;
+    if (!passed)
+    {
+        std::cerr << str << '\n';
+    }
+    require(passed);
 }
 
 int main(int argc, char *argv[])
@@ -73,10 +68,9 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    const std::filesystem::path path{args[1]};
-
     try
     {
+        const auto *path = args[1];
         run(path);
     }
     catch (const std::exception &e)

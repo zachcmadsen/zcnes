@@ -17,9 +17,11 @@ Cart::Cart(std::span<const std::uint8_t> rom)
     const auto header = rom.first<header_size>();
     const auto prg_rom_bank_count = header[prg_rom_bank_count_offset];
 
+    const auto contents = rom.subspan(header_size);
+
     const auto prg_rom_size = prg_rom_bank_count * prg_rom_bank_size;
     prg_rom.resize(prg_rom_size);
-    std::ranges::copy(rom.subspan(header_size, prg_rom_size), prg_rom.data());
+    std::ranges::copy(contents.first(prg_rom_size), prg_rom.data());
 }
 
 std::uint8_t Cart::read_prg_ram(std::uint16_t addr)

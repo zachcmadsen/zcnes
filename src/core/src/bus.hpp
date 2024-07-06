@@ -14,7 +14,7 @@ class Ppu;
 class Bus
 {
   public:
-    explicit Bus(Cart *cart, Ppu *ppu);
+    explicit Bus(Ppu *ppu, Cart *cart);
 
     std::uint8_t read_byte(std::uint16_t addr);
 
@@ -23,11 +23,15 @@ class Bus
     [[nodiscard]] std::optional<std::uint8_t> peek_byte(std::uint16_t addr) const;
 
   private:
-    std::array<std::uint8_t, 0x800> ram{};
-    Cart *cart;
+    static constexpr std::uint16_t ram_size = 0x800;
+
+    std::array<std::uint8_t, ram_size> ram{};
     Ppu *ppu;
+    Cart *cart;
 
     std::uint64_t master_clock{2};
+
+    void sync_ppu();
 };
 
 } // namespace zcnes

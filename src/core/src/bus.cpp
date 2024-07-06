@@ -16,14 +16,13 @@ std::uint16_t mirror_ram_addr(std::uint16_t addr)
     return addr & 0x07FF;
 }
 
-Bus::Bus(Cart *cart, Ppu *ppu) : cart{cart}, ppu{ppu}
+Bus::Bus(Ppu *ppu, Cart *cart) : ppu{ppu}, cart{cart}
 {
 }
 
 std::uint8_t Bus::read_byte(std::uint16_t addr)
 {
-    master_clock += cpu_master_clock_divider / 2;
-    ppu->run(master_clock);
+    sync_ppu();
 
     std::uint8_t data = 0;
 
@@ -44,16 +43,14 @@ std::uint8_t Bus::read_byte(std::uint16_t addr)
         data = cart->read_prg_rom(addr);
     }
 
-    master_clock += cpu_master_clock_divider / 2;
-    ppu->run(master_clock);
+    sync_ppu();
 
     return data;
 }
 
 void Bus::write_byte(std::uint16_t addr, std::uint8_t data)
 {
-    master_clock += cpu_master_clock_divider / 2;
-    ppu->run(master_clock);
+    sync_ppu();
 
     if (addr <= 0x1FFF)
     {
@@ -68,8 +65,7 @@ void Bus::write_byte(std::uint16_t addr, std::uint8_t data)
         cart->write_prg_ram(addr, data);
     }
 
-    master_clock += cpu_master_clock_divider / 2;
-    ppu->run(master_clock);
+    sync_ppu();
 }
 
 std::optional<std::uint8_t> Bus::peek_byte(std::uint16_t addr) const
@@ -90,6 +86,12 @@ std::optional<std::uint8_t> Bus::peek_byte(std::uint16_t addr) const
     }
 
     return data;
+}
+
+void Bus::sync_ppu()
+{
+    master_clock += cpu_master_clock_divider / 2;
+    ppu->run(master_clock);
 }
 
 } // namespace zcnes

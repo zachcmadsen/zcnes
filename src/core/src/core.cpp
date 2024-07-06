@@ -10,7 +10,7 @@
 namespace zcnes
 {
 
-Core::Core(std::span<const std::uint8_t> rom) : cart{rom}, bus{&cart, &ppu}, cpu{&bus}, ppu{&cpu}
+Core::Core(std::span<const std::uint8_t> rom) : cart{rom}, bus{&ppu, &cart}, cpu{&bus}, ppu{&cpu}
 {
     cpu.reset();
 }
