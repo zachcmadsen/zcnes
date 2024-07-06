@@ -117,7 +117,7 @@ void Ppu::tick()
         scanline = (scanline + 1) % 262;
     }
 
-    // Some games (and test ROMs) rely on a one cycle delay of rendering flag
+    // Some games (and test ROMs) rely on a one cycle delay for rendering flag
     // updates.
     //
     // https://forums.nesdev.org/viewtopic.php?t=18325
