@@ -1,10 +1,10 @@
 #pragma once
 
 #include <bit>
-#include <climits>
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 
 namespace zcnes
 {
@@ -15,7 +15,7 @@ namespace detail
 /// Returns true if and only if bit `n` of `byte` is set.
 template <std::size_t n> inline bool bit(std::uint8_t byte)
 {
-    static_assert(n < (sizeof(std::uint8_t) * CHAR_BIT));
+    static_assert(n < std::numeric_limits<std::uint8_t>::digits);
     return byte & (1 << n);
 }
 
