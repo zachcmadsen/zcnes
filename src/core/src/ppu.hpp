@@ -86,9 +86,13 @@ class Ppu
     bool rendering_enabled{false};
     bool suppress_nmi{false};
 
+    std::uint8_t read_buffer{};
+
     Cpu<Bus> *cpu;
 
     void tick();
+
+    void increment_v();
 };
 
 } // namespace zcnes

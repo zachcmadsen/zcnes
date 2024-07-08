@@ -17,6 +17,7 @@ constexpr std::uint16_t MASK_ADDR = 0x2001;
 constexpr std::uint16_t STATUS_ADDR = 0x2002;
 constexpr std::uint16_t SCROLL_ADDR = 0x2005;
 constexpr std::uint16_t ADDRESS_ADDR = 0x2006;
+constexpr std::uint16_t DATA_ADDR = 0x2007;
 
 Ppu::Ppu(Cpu<Bus> *cpu) : cpu{cpu}
 {
@@ -52,6 +53,17 @@ std::uint8_t Ppu::read(std::uint16_t addr)
         {
             suppress_nmi = true;
         }
+        break;
+    case DATA_ADDR:
+        // TODO: The reads work differently, on some models, when reading
+        // palette data from 0x3F00 - 0x3FFF. I'm not sure if I need to
+        // emulate it.
+        //
+        // https://www.nesdev.org/wiki/PPU_registers#Reading_palette_RAM
+        open_bus = read_buffer;
+
+        // TODO: Fill the read buffer.
+        increment_v();
         break;
     default:
         break;
@@ -120,6 +132,10 @@ void Ppu::write(std::uint16_t addr, std::uint8_t data)
         }
         w = !w;
         break;
+    case DATA_ADDR:
+        // TODO: Write the data.
+        increment_v();
+        break;
     default:
         break;
     }
@@ -164,6 +180,13 @@ void Ppu::tick()
     //
     // https://forums.nesdev.org/viewtopic.php?t=18325
     rendering_enabled = mask.show_bg || mask.show_sprites;
+}
+
+void Ppu::increment_v()
+{
+    auto raw_v = std::bit_cast<std::uint16_t>(v);
+    raw_v += ctrl.vram_addr_inc ? 32 : 1;
+    v = std::bit_cast<Address>(raw_v);
 }
 
 } // namespace zcnes
