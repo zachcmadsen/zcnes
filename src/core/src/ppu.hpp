@@ -1,8 +1,10 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 #include <cpu/cpu.hpp>
+#include <limits>
 
 #include "bus.hpp"
 
@@ -55,9 +57,24 @@ class Ppu
     };
     static_assert(sizeof(Mask) == 1);
 
+    struct Address
+    {
+        std::uint16_t coarse_x_scroll : 5;
+        std::uint16_t coarse_y_scroll : 5;
+        std::uint16_t nt : 2;
+        std::uint16_t fine_y_scroll : 3;
+    };
+    static_assert(sizeof(Address) == 2);
+
     Ctrl ctrl{};
     Mask mask{};
     Status status{.sprite_overflow = true, .sprite_0_hit = false, .vblank = true};
+
+    Address v{};
+    Address t{};
+    std::uint8_t x{};
+    bool w{};
+
     std::uint8_t open_bus{};
 
     int scanline{};
