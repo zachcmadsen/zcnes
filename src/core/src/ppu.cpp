@@ -10,7 +10,7 @@
 namespace zcnes
 {
 
-constexpr std::uint64_t ppu_master_clock_divider = 4;
+constexpr std::uint64_t PPU_MASTER_CLOCK_DIVIDER = 4;
 
 constexpr std::uint16_t CONTROL_ADDR = 0x2000;
 constexpr std::uint16_t MASK_ADDR = 0x2001;
@@ -24,10 +24,10 @@ Ppu::Ppu(Cpu<Bus> *cpu) : cpu{cpu}
 
 void Ppu::run(std::uint64_t cpu_master_clock)
 {
-    while (master_clock + ppu_master_clock_divider <= cpu_master_clock)
+    while (master_clock + PPU_MASTER_CLOCK_DIVIDER <= cpu_master_clock)
     {
         tick();
-        master_clock += ppu_master_clock_divider;
+        master_clock += PPU_MASTER_CLOCK_DIVIDER;
     }
 }
 
