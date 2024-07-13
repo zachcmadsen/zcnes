@@ -4,7 +4,10 @@
 #include <stdexcept>
 #include <string>
 
-constexpr void require(bool condition, const std::source_location location = std::source_location::current())
+namespace zcnes
+{
+
+constexpr void check(bool condition, const std::source_location location = std::source_location::current())
 {
     if (!condition)
     {
@@ -12,3 +15,5 @@ constexpr void require(bool condition, const std::source_location location = std
                                  std::to_string(location.line()) + ":" + std::to_string(location.column()));
     }
 }
+
+} // namespace zcnes

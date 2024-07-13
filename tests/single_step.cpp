@@ -11,8 +11,9 @@
 #include <cista/containers/vector.h>
 #include <cista/mmap.h>
 #include <cista/serialization.h>
-#include <common/common.h>
 #include <cpu.hpp>
+
+#include "check.hpp"
 
 constexpr std::size_t addr_space_size = 0x10000;
 
@@ -97,17 +98,17 @@ void run(const char *path)
         cpu.step();
 
         cpu.save_state(state);
-        require(state.pc == test.final.pc);
-        require(state.s == test.final.s);
-        require(state.a == test.final.a);
-        require(state.x == test.final.x);
-        require(state.y == test.final.y);
-        require(std::bit_cast<std::uint8_t>(state.p) == test.final.p);
+        zcnes::check(state.pc == test.final.pc);
+        zcnes::check(state.s == test.final.s);
+        zcnes::check(state.a == test.final.a);
+        zcnes::check(state.x == test.final.x);
+        zcnes::check(state.y == test.final.y);
+        zcnes::check(std::bit_cast<std::uint8_t>(state.p) == test.final.p);
         for (const auto &[addr, data] : test.final.ram)
         {
-            require(bus.ram.at(addr) == data);
+            zcnes::check(bus.ram.at(addr) == data);
         }
-        require(bus.cycles == test.cycles);
+        zcnes::check(bus.cycles == test.cycles);
     }
 }
 

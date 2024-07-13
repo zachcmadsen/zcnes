@@ -11,9 +11,9 @@
 #include <string>
 #include <vector>
 
-#include <common/common.h>
 #include <core/core.hpp>
 
+#include "check.hpp"
 
 constexpr std::uint16_t status_addr = 0x6000;
 constexpr std::uint16_t output_addr = 0x6004;
@@ -22,7 +22,7 @@ constexpr std::uint8_t running_status = 0x80;
 void run(const char *path)
 {
     std::ifstream ifs{path, std::ios::binary};
-    require(ifs.is_open());
+    zcnes::check(ifs.is_open());
     const std::vector<std::uint8_t> rom{std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
 
     auto core = zcnes::make_core(rom);
@@ -56,7 +56,7 @@ void run(const char *path)
     {
         std::cerr << str << '\n';
     }
-    require(passed);
+    zcnes::check(passed);
 }
 
 int main(int argc, char *argv[])
