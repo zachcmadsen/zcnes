@@ -3,11 +3,14 @@ include(FetchContent)
 include(FetchContent)
 FetchContent_Declare(
   zcnes-tests
-  URL https://github.com/zachcmadsen/zcnes-tests/archive/refs/tags/v0.2.zip
+  URL https://github.com/zachcmadsen/zcnes-tests/archive/refs/tags/v0.1.zip
 )
 message(STATUS "Fetching zcnes-tests...")
 FetchContent_MakeAvailable(zcnes-tests)
 
 add_subdirectory(common)
 add_subdirectory(core)
-add_subdirectory(cpu)
+
+if (ZCNES_BUILD_SINGLE_STEP_TESTS)
+  add_subdirectory(cpu)
+endif()
