@@ -1,79 +1,14 @@
 #pragma once
 
 #include <bit>
-#include <concepts>
-#include <cstddef>
 #include <cstdint>
-#include <limits>
+
+#include "bit.hpp"
+#include "concepts.hpp"
+#include "num.hpp"
 
 namespace zcnes
 {
-
-namespace detail
-{
-
-/// Returns true if and only if bit `n` of `byte` is set.
-template <std::size_t n> inline bool bit(std::uint8_t byte)
-{
-    static_assert(n < std::numeric_limits<std::uint8_t>::digits);
-    return byte & (1 << n);
-}
-
-/// Returns true if and only if the least significant bit of `byte` is set.
-inline bool lsb(std::uint8_t byte)
-{
-    return bit<0>(byte);
-}
-
-/// Returns true if and only if the most significant bit of `byte` is set.
-inline bool msb(std::uint8_t byte)
-{
-    return bit<7>(byte);
-}
-
-/// Combines `high` and `low` into a 16-bit integer.
-///
-/// The implementation is copied from https://stackoverflow.com/a/57320436.
-inline std::uint16_t combine(std::uint8_t high, std::uint8_t low)
-{
-    return static_cast<std::uint16_t>(static_cast<unsigned>(high) << 8 | static_cast<unsigned>(low));
-}
-
-/// Computes `lhs` + `rhs` and returns a boolean indicating whether overflow
-/// occurred.
-inline bool overflowing_add(std::uint8_t lhs, std::uint8_t rhs, std::uint8_t *res)
-{
-    *res = lhs + rhs;
-    return *res < lhs;
-}
-
-/// Computes `lhs` - `rhs` and returns a boolean indicating whether overflow
-/// occurred.
-inline bool overflowing_sub(std::uint8_t lhs, std::uint8_t rhs, std::uint8_t *res)
-{
-    *res = lhs - rhs;
-    return *res > lhs;
-}
-
-/// Computes `lhs` + `rhs` + `carry`, returns the sum, and stores the ouput
-/// carry in `out`.
-inline std::uint8_t carrying_add(std::uint8_t lhs, std::uint8_t rhs, std::uint8_t carry, std::uint8_t *out)
-{
-    std::uint8_t res = 0;
-    auto overflow = detail::overflowing_add(lhs, rhs, &res);
-    overflow |= detail::overflowing_add(res, carry, &res);
-    *out = static_cast<std::uint8_t>(overflow);
-    return res;
-}
-
-} // namespace detail
-
-/// A type that can be addressed to read and write bytes.
-template <typename T>
-concept Addressable = requires(T t, std::uint16_t addr, std::uint8_t data) {
-    { t.read_byte(addr) } -> std::same_as<std::uint8_t>;
-    { t.write_byte(addr, data) } -> std::same_as<void>;
-};
 
 // This is incomplete because, for now, it's only used for single steps tests.
 struct CpuState
@@ -104,7 +39,7 @@ template <Addressable T> class Cpu
         p.i = true;
         const auto pc_low = read_byte(reset_vector);
         const auto pc_high = read_byte(reset_vector + 1);
-        pc = detail::combine(pc_high, pc_low);
+        pc = bit::combine(pc_high, pc_low);
     }
 
     void step()
@@ -452,7 +387,7 @@ template <Addressable T> class Cpu
         p.i = true;
         const auto pc_low = read_byte(nmi_vector);
         const auto pc_high = read_byte(nmi_vector + 1);
-        pc = detail::combine(pc_high, pc_low);
+        pc = bit::combine(pc_high, pc_low);
     }
 
     std::uint8_t read_byte(std::uint16_t addr)
@@ -478,7 +413,7 @@ template <Addressable T> class Cpu
     void set_z_and_n(std::uint8_t data)
     {
         p.z = data == 0;
-        p.n = detail::msb(data);
+        p.n = bit::msb(data);
     }
 
     void push(std::uint8_t data)
@@ -502,9 +437,9 @@ template <Addressable T> class Cpu
     {
         const auto prev_a = a;
         std::uint8_t carry = 0;
-        a = detail::carrying_add(a, data, p.c, &carry);
+        a = num::carrying_add(a, data, p.c, &carry);
         p.c = carry;
-        p.v = detail::msb((prev_a ^ a) & (data ^ a));
+        p.v = bit::msb((prev_a ^ a) & (data ^ a));
         set_z_and_n(a);
     }
 
@@ -521,7 +456,7 @@ template <Addressable T> class Cpu
             {
                 const auto low = static_cast<std::uint8_t>(prev_pc + offset);
                 const auto high = static_cast<std::uint8_t>(prev_pc >> 8);
-                read_byte(detail::combine(high, low));
+                read_byte(bit::combine(high, low));
             }
         }
     }
@@ -529,7 +464,7 @@ template <Addressable T> class Cpu
     void compare(std::uint8_t lhs, std::uint8_t rhs)
     {
         std::uint8_t res = 0;
-        const auto overflow = detail::overflowing_sub(lhs, rhs, &res);
+        const auto overflow = num::overflowing_sub(lhs, rhs, &res);
         p.c = !overflow;
         set_z_and_n(res);
     }
@@ -545,39 +480,39 @@ template <Addressable T> class Cpu
         std::uint8_t high = addr >> 8;
         data &= high + static_cast<std::uint8_t>(!had_page_cross);
         high = had_page_cross ? data : high;
-        write_byte(detail::combine(high, low), data);
+        write_byte(bit::combine(high, low), data);
     }
 
     void abs()
     {
         const auto low = next_byte();
         const auto high = next_byte();
-        addr = detail::combine(high, low);
+        addr = bit::combine(high, low);
     }
 
     template <bool write> void abx()
     {
         auto low = next_byte();
-        const auto overflow = detail::overflowing_add(low, x, &low);
+        const auto overflow = num::overflowing_add(low, x, &low);
         const auto high = next_byte();
         if (write || overflow)
         {
-            read_byte(detail::combine(high, low));
+            read_byte(bit::combine(high, low));
         }
-        addr = detail::combine(high + overflow, low);
+        addr = bit::combine(high + overflow, low);
         had_page_cross = overflow;
     }
 
     template <bool write> void aby()
     {
         auto low = next_byte();
-        const auto overflow = detail::overflowing_add(low, y, &low);
+        const auto overflow = num::overflowing_add(low, y, &low);
         const auto high = next_byte();
         if (write || overflow)
         {
-            read_byte(detail::combine(high, low));
+            read_byte(bit::combine(high, low));
         }
-        addr = detail::combine(high + overflow, low);
+        addr = bit::combine(high + overflow, low);
         had_page_cross = overflow;
     }
 
@@ -589,7 +524,7 @@ template <Addressable T> class Cpu
         const auto low = read_byte(ptr);
         ptr += 1;
         const auto high = read_byte(ptr);
-        addr = detail::combine(high, low);
+        addr = bit::combine(high, low);
     }
 
     template <bool write> void idy()
@@ -598,12 +533,12 @@ template <Addressable T> class Cpu
         auto low = read_byte(ptr);
         ptr += 1;
         const auto high = read_byte(ptr);
-        const auto overflow = detail::overflowing_add(low, y, &low);
+        const auto overflow = num::overflowing_add(low, y, &low);
         if (write || overflow)
         {
-            read_byte(detail::combine(high, low));
+            read_byte(bit::combine(high, low));
         }
-        addr = detail::combine(high + overflow, low);
+        addr = bit::combine(high + overflow, low);
         had_page_cross = overflow;
     }
 
@@ -623,9 +558,9 @@ template <Addressable T> class Cpu
     {
         const auto ptr_low = next_byte();
         const auto ptr_high = next_byte();
-        const auto low = read_byte(detail::combine(ptr_high, ptr_low));
-        const auto high = read_byte(detail::combine(ptr_high, ptr_low + 1));
-        addr = detail::combine(high, low);
+        const auto low = read_byte(bit::combine(ptr_high, ptr_low));
+        const auto high = read_byte(bit::combine(ptr_high, ptr_low + 1));
+        addr = bit::combine(high, low);
     }
 
     void zpg()
@@ -658,7 +593,7 @@ template <Addressable T> class Cpu
     void alr()
     {
         a &= read_byte(addr);
-        const auto carry = detail::lsb(a);
+        const auto carry = bit::lsb(a);
         a >>= 1;
         p.c = carry;
         set_z_and_n(a);
@@ -667,7 +602,7 @@ template <Addressable T> class Cpu
     void anc()
     {
         a &= read_byte(addr);
-        p.c = detail::msb(a);
+        p.c = bit::msb(a);
         set_z_and_n(a);
     }
 
@@ -686,8 +621,8 @@ template <Addressable T> class Cpu
         a &= read_byte(addr);
         a >>= 1;
         a |= p.c << 7;
-        p.c = detail::bit<6>(a);
-        p.v = p.c ^ detail::bit<5>(a);
+        p.c = bit::bit<6>(a);
+        p.v = p.c ^ bit::bit<5>(a);
         set_z_and_n(a);
     }
 
@@ -695,7 +630,7 @@ template <Addressable T> class Cpu
     {
         auto data = read_byte(addr);
         write_byte(addr, data);
-        const auto carry = detail::msb(data);
+        const auto carry = bit::msb(data);
         data <<= 1;
         write_byte(addr, data);
         p.c = carry;
@@ -705,7 +640,7 @@ template <Addressable T> class Cpu
     void asl_a()
     {
         read_byte(pc);
-        const auto carry = detail::msb(a);
+        const auto carry = bit::msb(a);
         a <<= 1;
         p.c = carry;
         set_z_and_n(a);
@@ -730,8 +665,8 @@ template <Addressable T> class Cpu
     {
         const auto data = read_byte(addr);
         p.z = !(data & a);
-        p.v = detail::bit<6>(data);
-        p.n = detail::msb(data);
+        p.v = bit::bit<6>(data);
+        p.n = bit::msb(data);
     }
 
     void bmi()
@@ -759,7 +694,7 @@ template <Addressable T> class Cpu
         p.i = true;
         const auto pc_low = read_byte(irq_vector);
         const auto pc_high = read_byte(irq_vector + 1);
-        pc = detail::combine(pc_high, pc_low);
+        pc = bit::combine(pc_high, pc_low);
     }
 
     void bvc()
@@ -900,7 +835,7 @@ template <Addressable T> class Cpu
         push(pc >> 8);
         push(static_cast<std::uint8_t>(pc));
         const auto pc_high = next_byte();
-        pc = detail::combine(pc_high, pc_low);
+        pc = bit::combine(pc_high, pc_low);
     }
 
     void las()
@@ -940,7 +875,7 @@ template <Addressable T> class Cpu
     {
         auto data = read_byte(addr);
         write_byte(addr, data);
-        const auto carry = detail::lsb(data);
+        const auto carry = bit::lsb(data);
         data >>= 1;
         write_byte(addr, data);
         p.c = carry;
@@ -950,7 +885,7 @@ template <Addressable T> class Cpu
     void lsr_a()
     {
         read_byte(pc);
-        const auto carry = detail::lsb(a);
+        const auto carry = bit::lsb(a);
         a >>= 1;
         p.c = carry;
         set_z_and_n(a);
@@ -1010,7 +945,7 @@ template <Addressable T> class Cpu
     {
         auto data = read_byte(addr);
         write_byte(addr, data);
-        const auto carry = detail::msb(data);
+        const auto carry = bit::msb(data);
         data <<= 1;
         data |= static_cast<std::uint8_t>(p.c);
         write_byte(addr, data);
@@ -1023,7 +958,7 @@ template <Addressable T> class Cpu
     {
         auto data = read_byte(addr);
         write_byte(addr, data);
-        const auto carry = detail::msb(data);
+        const auto carry = bit::msb(data);
         data <<= 1;
         data |= static_cast<std::uint8_t>(p.c);
         write_byte(addr, data);
@@ -1034,7 +969,7 @@ template <Addressable T> class Cpu
     void rol_a()
     {
         read_byte(pc);
-        const auto carry = detail::msb(a);
+        const auto carry = bit::msb(a);
         a <<= 1;
         a |= static_cast<std::uint8_t>(p.c);
         p.c = carry;
@@ -1045,7 +980,7 @@ template <Addressable T> class Cpu
     {
         auto data = read_byte(addr);
         write_byte(addr, data);
-        const auto carry = detail::lsb(data);
+        const auto carry = bit::lsb(data);
         data >>= 1;
         data |= p.c << 7;
         write_byte(addr, data);
@@ -1056,7 +991,7 @@ template <Addressable T> class Cpu
     void ror_a()
     {
         read_byte(pc);
-        const auto carry = detail::lsb(a);
+        const auto carry = bit::lsb(a);
         a >>= 1;
         a |= p.c << 7;
         p.c = carry;
@@ -1067,7 +1002,7 @@ template <Addressable T> class Cpu
     {
         auto data = read_byte(addr);
         write_byte(addr, data);
-        const auto carry = detail::lsb(data);
+        const auto carry = bit::lsb(data);
         data >>= 1;
         data |= p.c << 7;
         write_byte(addr, data);
@@ -1085,7 +1020,7 @@ template <Addressable T> class Cpu
         p = new_p;
         const auto pc_low = pop();
         const auto pc_high = pop();
-        pc = detail::combine(pc_high, pc_low);
+        pc = bit::combine(pc_high, pc_low);
     }
 
     void rts()
@@ -1094,7 +1029,7 @@ template <Addressable T> class Cpu
         peek();
         const auto pc_low = pop();
         const auto pc_high = pop();
-        pc = detail::combine(pc_high, pc_low);
+        pc = bit::combine(pc_high, pc_low);
         next_byte();
     }
 
@@ -1112,7 +1047,7 @@ template <Addressable T> class Cpu
     void sbx()
     {
         const auto data = read_byte(addr);
-        const auto overflow = detail::overflowing_sub(a & x, data, &x);
+        const auto overflow = num::overflowing_sub(a & x, data, &x);
         p.c = !overflow;
         set_z_and_n(x);
     }
@@ -1154,7 +1089,7 @@ template <Addressable T> class Cpu
     {
         auto data = read_byte(addr);
         write_byte(addr, data);
-        const auto carry = detail::msb(data);
+        const auto carry = bit::msb(data);
         data <<= 1;
         write_byte(addr, data);
         a |= data;
@@ -1166,7 +1101,7 @@ template <Addressable T> class Cpu
     {
         auto data = read_byte(addr);
         write_byte(addr, data);
-        const auto carry = detail::lsb(data);
+        const auto carry = bit::lsb(data);
         data >>= 1;
         write_byte(addr, data);
         a ^= data;
