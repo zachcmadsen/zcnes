@@ -2,9 +2,8 @@
 
 #include <cstdint>
 
-#include <cpu/cpu.hpp>
-
 #include "bus.hpp"
+#include "cpu.hpp"
 
 namespace zcnes
 {

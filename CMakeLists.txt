@@ -10,7 +10,6 @@ option(ZCNES_BUILD_FRONTEND "Build ZCNES frontend" OFF)
 option(ZCNES_BUILD_TESTS "Build ZCNES tests" ON)
 
 add_subdirectory(src/core)
-add_subdirectory(src/cpu)
 
 if (ZCNES_BUILD_FRONTEND)
   add_subdirectory(src/frontend)

@@ -10,9 +10,12 @@ FetchContent_MakeAvailable(cista)
 
 add_executable(single-step)
 target_sources(single-step PRIVATE single_step.cpp)
-target_link_libraries(single-step PRIVATE cista common cpu)
+target_link_libraries(single-step PRIVATE cista common core)
 # Single step tests are too slow without some optimizations.
 target_compile_options(single-step PRIVATE "$<$<CONFIG:Debug>:-O1>")
+
+get_target_property (private_include_dirs core INCLUDE_DIRECTORIES)
+target_include_directories(single-step PRIVATE ${private_include_dirs} .)
 
 set(OPCODES_TO_SKIP "02" "12" "22" "32" "42" "52" "62" "72" "92" "b2" "d2" "f2" "8b" "ab")
 file(GLOB SINGLE_STEP_FILES "${zcnes-tests_SOURCE_DIR}/single_step/*.cista")

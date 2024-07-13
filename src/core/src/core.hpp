@@ -5,10 +5,10 @@
 #include <span>
 
 #include <core/core.hpp>
-#include <cpu/cpu.hpp>
 
 #include "bus.hpp"
 #include "cart.hpp"
+#include "cpu.hpp"
 #include "ppu.hpp"
 
 namespace zcnes

@@ -12,7 +12,7 @@
 #include <cista/mmap.h>
 #include <cista/serialization.h>
 #include <common/common.h>
-#include <cpu/cpu.hpp>
+#include <cpu.hpp>
 
 constexpr std::size_t addr_space_size = 0x10000;
 
