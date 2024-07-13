@@ -1,6 +1,5 @@
 include(FetchContent)
 
-include(FetchContent)
 FetchContent_Declare(
   zcnes-tests
   URL https://github.com/zachcmadsen/zcnes-tests/archive/refs/tags/v0.1.zip

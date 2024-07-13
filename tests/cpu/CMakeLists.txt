@@ -1,6 +1,13 @@
 include(FetchContent)
 
 FetchContent_Declare(
+  zcnes-single-step-tests
+  URL https://github.com/zachcmadsen/zcnes-single-step-tests/archive/refs/tags/v0.1.zip
+)
+message(STATUS "Fetching zcnes-single-step-tests...")
+FetchContent_MakeAvailable(zcnes-single-step-tests)
+
+FetchContent_Declare(
     cista
     GIT_REPOSITORY https://github.com/felixguendling/cista
     GIT_TAG v0.15
@@ -18,7 +25,7 @@ get_target_property (private_include_dirs core INCLUDE_DIRECTORIES)
 target_include_directories(single-step PRIVATE ${private_include_dirs} .)
 
 set(OPCODES_TO_SKIP "02" "12" "22" "32" "42" "52" "62" "72" "92" "b2" "d2" "f2" "8b" "ab")
-file(GLOB SINGLE_STEP_FILES "${zcnes-tests_SOURCE_DIR}/single_step/*.cista")
+file(GLOB SINGLE_STEP_FILES "${zcnes-single-step-tests_SOURCE_DIR}/single_step/*.cista")
 foreach(SINGLE_STEP_FILE ${SINGLE_STEP_FILES})
   cmake_path(GET SINGLE_STEP_FILE STEM OPCODE)
   if (NOT "${OPCODE}" IN_LIST OPCODES_TO_SKIP)
