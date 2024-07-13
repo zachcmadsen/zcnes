@@ -55,7 +55,7 @@ std::uint8_t Ppu::read(std::uint16_t addr)
         }
         break;
     case DATA_ADDR:
-        // TODO: The reads work differently, on some models, when reading
+        // TODO: The reads work differently (on some models) when reading
         // palette data from 0x3F00 - 0x3FFF. I'm not sure if I need to
         // emulate it.
         //
