@@ -7,36 +7,31 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-
     strategy:
       matrix:
-        include:
-          - c_compiler: "clang-17"
-            cxx_compiler: "clang++-17"
-            os: ubuntu-24.04
-          - c_compiler: "gcc-14"
-            cxx_compiler: "g++-14"
-            os: ubuntu-24.04
-          - c_compiler: "cl"
-            cxx_compiler: "cl"
-            os: windows-latest
+        os: [ubuntu-24.04, windows-latest]
+
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ilammy/msvc-dev-cmd@v1
-        if: ${{ matrix.cxx_compiler == 'cl' }}
+      - name: Install Clang 17
+        if: ${{ matrix.os == 'windows-latest' }}
+        # The commands are from https://apt.llvm.org.
+        run: |
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 17
 
       - name: Install Ninja
-        if: ${{ matrix.cxx_compiler != 'cl' }}
         run: |
           curl -L -o ninja-linux.zip https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-linux.zip
           unzip ninja-linux.zip -d bin
           echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
 
       - name: Configure
-        run: cmake -S . -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${{matrix.c_compiler}} -DCMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }}
+        run: cmake -S . -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang-17 -DCMAKE_CXX_COMPILER=clang++-17
 
       - name: Build
         run: cmake --build build
