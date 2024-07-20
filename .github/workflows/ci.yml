@@ -20,7 +20,7 @@ jobs:
         if: ${{ matrix.os == 'windows-latest' }}
         # The commands are from https://apt.llvm.org.
         run: |
-          wget https://apt.llvm.org/llvm.sh
+          curl -L -o llvm.sh https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh 17
 
