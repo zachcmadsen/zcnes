@@ -6,10 +6,12 @@
 
 #include <core/core.hpp>
 
+#include "apu.hpp"
 #include "bus.hpp"
 #include "cart.hpp"
 #include "cpu.hpp"
 #include "ppu.hpp"
+#include "scheduler.hpp"
 
 namespace zcnes
 {
@@ -21,13 +23,20 @@ class Core final : public CoreBase
 
     void step() override;
 
+    void fill(std::span<std::int16_t> samples) override;
+
     [[nodiscard]] std::optional<std::uint8_t> peek(std::uint16_t addr) const override;
 
   private:
+    Scheduler scheduler{};
+
     Cart cart;
+    Apu apu;
     Bus bus;
     Cpu<Bus> cpu;
     Ppu ppu;
+
+    void run(std::uint64_t ticks);
 };
 
 } // namespace zcnes
