@@ -1,6 +1,9 @@
 #include "SDL_audio.h"
+#include "SDL_render.h"
+#include "SDL_video.h"
 #include <SDL.h>
 #include <array>
+#include <atomic>
 #include <bit>
 #include <cstdint>
 #include <cstring>
@@ -15,6 +18,8 @@
 #include <rtrb.h>
 
 std::atomic_flag flag = ATOMIC_FLAG_INIT;
+
+std::atomic_flag exit_flag = ATOMIC_FLAG_INIT;
 
 void SDLCALL audio_callback(void *user_data, std::uint8_t *stream, int len)
 {
@@ -64,7 +69,7 @@ int main(int argc, char *argv[])
 
             std::array<std::int16_t, 1024> sample_buffer{};
 
-            for (;;)
+            while (!exit_flag.test())
             {
                 auto available_bytes = rtrb_write_available(rb);
                 auto samples_needed = available_bytes / sizeof(std::int16_t);
@@ -79,8 +84,6 @@ int main(int argc, char *argv[])
             }
         },
         rb, rom);
-    // TODO: Exit the emulator thread properly when we get a quit event.
-    emu_thread.detach();
 
     // The video subsystem automatically initializes the events subsystem.
     SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO);
@@ -108,7 +111,7 @@ int main(int argc, char *argv[])
     SDL_Window *window = SDL_CreateWindow("SDL pixels", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height,
                                           SDL_WINDOW_SHOWN);
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
-    SDL_Texture *pixels =
+    SDL_Texture *texture =
         SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBX8888, SDL_TEXTUREACCESS_STREAMING, width, height);
 
     unsigned int t1 = SDL_GetTicks();
@@ -122,7 +125,7 @@ int main(int argc, char *argv[])
         {
             if (ev.type == SDL_QUIT)
             {
-                return 0;
+                goto cleanup;
             }
         }
 
@@ -130,12 +133,12 @@ int main(int argc, char *argv[])
         float delta = (t2 - t1) / 1000.0f;
         t1 = t2;
 
-        void *data;
+        void *pixels;
         int pitch;
-        SDL_LockTexture(pixels, NULL, &data, &pitch);
+        SDL_LockTexture(texture, NULL, &pixels, &pitch);
         {
             // clear to black background
-            SDL_memset(data, 0, pitch * height);
+            SDL_memset(pixels, 0, pitch * height);
 
             // move 100 pixels/second
             pos += delta * 100.0f;
@@ -147,14 +150,35 @@ int main(int argc, char *argv[])
                 int y = i;
                 int x = ((int)pos + i) % width;
 
-                unsigned int *row = (unsigned int *)((char *)data + pitch * y);
+                unsigned int *row = (unsigned int *)((char *)pixels + pitch * y);
                 row[x] = 0xff0000ff; // 0xAABBGGRR
             }
         }
-        SDL_UnlockTexture(pixels);
+        SDL_UnlockTexture(texture);
 
         // copy to window
-        SDL_RenderCopy(renderer, pixels, NULL, NULL);
+        SDL_RenderCopy(renderer, texture, NULL, NULL);
         SDL_RenderPresent(renderer);
     }
+
+cleanup:
+
+    SDL_CloseAudioDevice(audio_device_id);
+
+    exit_flag.test_and_set();
+
+    flag.test_and_set();
+    flag.notify_one();
+
+    emu_thread.join();
+
+    rtrb_free(rb);
+
+    SDL_DestroyTexture(texture);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+
+    SDL_Quit();
+
+    return 0;
 }
