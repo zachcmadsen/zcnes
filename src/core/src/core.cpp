@@ -6,8 +6,6 @@
 #include <optional>
 #include <span>
 
-#include <core/core.hpp>
-
 namespace zcnes
 {
 
@@ -46,11 +44,6 @@ void Core::fill(std::span<std::int16_t> samples)
 std::optional<std::uint8_t> Core::peek(std::uint16_t addr) const
 {
     return bus.peek_byte(addr);
-}
-
-std::unique_ptr<CoreBase> make_core(std::span<const std::uint8_t> rom)
-{
-    return std::make_unique<Core>(rom);
 }
 
 } // namespace zcnes

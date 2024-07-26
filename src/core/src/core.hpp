@@ -4,8 +4,6 @@
 #include <optional>
 #include <span>
 
-#include <core/core.hpp>
-
 #include "apu.hpp"
 #include "bus.hpp"
 #include "cart.hpp"
@@ -16,16 +14,16 @@
 namespace zcnes
 {
 
-class Core final : public CoreBase
+class Core
 {
   public:
     explicit Core(std::span<const std::uint8_t> rom);
 
-    void step() override;
+    void step();
 
-    void fill(std::span<std::int16_t> samples) override;
+    void fill(std::span<std::int16_t> samples);
 
-    [[nodiscard]] std::optional<std::uint8_t> peek(std::uint16_t addr) const override;
+    [[nodiscard]] std::optional<std::uint8_t> peek(std::uint16_t addr) const;
 
   private:
     Scheduler scheduler{};

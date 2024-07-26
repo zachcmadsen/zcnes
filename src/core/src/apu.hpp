@@ -5,7 +5,6 @@
 #include <cstdint>
 #include <span>
 
-#define BLARGG_COMPILER_HAS_NAMESPACE 1
 #include <Blip_Buffer.h>
 #include <Nes_Apu.h>
 
@@ -31,7 +30,7 @@ class Apu
     Blip_Buffer buf;
     Nes_Apu apu;
 
-    std::uint64_t frame_start_tick;
+    std::uint64_t frame_start_tick{0};
 
     Scheduler *scheduler;
 };

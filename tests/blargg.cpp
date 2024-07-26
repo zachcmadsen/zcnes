@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-#include <core/core.hpp>
+#include <core.hpp>
 
 #include "check.hpp"
 
@@ -25,29 +25,29 @@ void run(const char *path)
     zcnes::check(ifs.is_open());
     const std::vector<std::uint8_t> rom{std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
 
-    auto core = zcnes::make_core(rom);
+    zcnes::Core core{rom};
 
-    auto status = core->peek(status_addr).value();
+    auto status = core.peek(status_addr).value();
     while (status != running_status)
     {
-        core->step();
-        status = core->peek(status_addr).value();
+        core.step();
+        status = core.peek(status_addr).value();
     }
 
     while (status == running_status)
     {
-        core->step();
-        status = core->peek(status_addr).value();
+        core.step();
+        status = core.peek(status_addr).value();
     }
 
     std::vector<std::uint8_t> output{};
     auto addr = output_addr;
-    auto c = core->peek(addr).value();
+    auto c = core.peek(addr).value();
     while (c != '\0')
     {
         output.push_back(c);
         addr += 1;
-        c = core->peek(addr).value();
+        c = core.peek(addr).value();
     }
 
     std::string str{output.begin(), output.end()};
