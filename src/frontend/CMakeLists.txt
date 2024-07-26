@@ -24,14 +24,13 @@ target_sources(zcnes PRIVATE main.cpp)
 target_link_libraries(zcnes PRIVATE rtrb::rtrb-shared SDL2::SDL2main SDL2::SDL2 core)
 
 # Copy SDL2.dll to zcnes's output directory.
-if (WIN32)
+if(WIN32)
     add_custom_command(
         TARGET zcnes
         POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:SDL2::SDL2>" "$<TARGET_FILE_DIR:zcnes>"
         VERBATIM
     )
-
     add_custom_command(
         TARGET zcnes
         POST_BUILD

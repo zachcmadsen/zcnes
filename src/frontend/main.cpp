@@ -2,6 +2,7 @@
 #include "SDL_render.h"
 #include "SDL_video.h"
 #include <SDL.h>
+#include <algorithm>
 #include <array>
 #include <atomic>
 #include <bit>
@@ -14,8 +15,10 @@
 #include <thread>
 #include <vector>
 
-#include <core/core.hpp>
+#include <core.hpp>
 #include <rtrb.h>
+
+#include "triple_buffer.hpp"
 
 std::atomic_flag flag = ATOMIC_FLAG_INIT;
 
@@ -63,9 +66,17 @@ int main(int argc, char *argv[])
 
     rtrb *rb = rtrb_new(1024 * sizeof(std::int16_t));
 
+    TripleBuffer<256 * 240 * sizeof(std::uint32_t)> triple_buffer;
+
     std::thread emu_thread(
-        [](rtrb *rb, std::span<const std::uint8_t> rom) {
-            auto core = zcnes::make_core(rom);
+        [&triple_buffer](rtrb *rb, std::span<const std::uint8_t> rom) {
+            zcnes::Core core{rom};
+
+            core.set_on_frame([&triple_buffer](std::span<const std::uint8_t> pixels) {
+                auto write_buffer = triple_buffer.get_write_buffer();
+                std::copy(pixels.begin(), pixels.end(), write_buffer.begin());
+                triple_buffer.swap_write_buffer();
+            });
 
             std::array<std::int16_t, 1024> sample_buffer{};
 
@@ -75,7 +86,7 @@ int main(int argc, char *argv[])
                 auto samples_needed = available_bytes / sizeof(std::int16_t);
 
                 std::span samples{sample_buffer.data(), samples_needed};
-                core->fill(samples);
+                core.fill(samples);
 
                 rtrb_write(rb, std::bit_cast<std::uint8_t *>(sample_buffer.data()), available_bytes);
 
@@ -108,15 +119,10 @@ int main(int argc, char *argv[])
     // An opened audio device starts out paused. We need to unpause it.
     SDL_PauseAudioDevice(audio_device_id, 0);
 
-    SDL_Window *window = SDL_CreateWindow("SDL pixels", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height,
-                                          SDL_WINDOW_SHOWN);
+    SDL_Window *window =
+        SDL_CreateWindow("SDL pixels", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 256, 240, SDL_WINDOW_SHOWN);
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
-    SDL_Texture *texture =
-        SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBX8888, SDL_TEXTUREACCESS_STREAMING, width, height);
-
-    unsigned int t1 = SDL_GetTicks();
-
-    float pos = 0;
+    SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBX8888, SDL_TEXTUREACCESS_STREAMING, 256, 240);
 
     for (;;)
     {
@@ -129,34 +135,15 @@ int main(int argc, char *argv[])
             }
         }
 
-        unsigned int t2 = SDL_GetTicks();
-        float delta = (t2 - t1) / 1000.0f;
-        t1 = t2;
-
         void *pixels;
         int pitch;
         SDL_LockTexture(texture, NULL, &pixels, &pitch);
         {
-            // clear to black background
-            SDL_memset(pixels, 0, pitch * height);
-
-            // move 100 pixels/second
-            pos += delta * 100.0f;
-            pos = fmodf(pos, width);
-
-            // draw red diagonal line
-            for (int i = 0; i < height; i++)
-            {
-                int y = i;
-                int x = ((int)pos + i) % width;
-
-                unsigned int *row = (unsigned int *)((char *)pixels + pitch * y);
-                row[x] = 0xff0000ff; // 0xAABBGGRR
-            }
+            auto read_buffer = triple_buffer.get_read_buffer();
+            std::copy(read_buffer.begin(), read_buffer.end(), static_cast<std::uint8_t *>(pixels));
         }
         SDL_UnlockTexture(texture);
 
-        // copy to window
         SDL_RenderCopy(renderer, texture, NULL, NULL);
         SDL_RenderPresent(renderer);
     }

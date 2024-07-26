@@ -25,6 +25,11 @@ class Core
 
     [[nodiscard]] std::optional<std::uint8_t> peek(std::uint16_t addr) const;
 
+    template <typename T> void set_on_frame(T &&f)
+    {
+        ppu.on_frame = f;
+    }
+
   private:
     Scheduler scheduler{};
 

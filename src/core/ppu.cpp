@@ -142,7 +142,14 @@ void Ppu::write(std::uint16_t addr, std::uint8_t data)
 
 void Ppu::tick()
 {
-    if (scanline == 241 && cycle == 1)
+    if (scanline < 240 && cycle < 256)
+    {
+        // Paint the screen red every frame.
+        auto pixel_index = scanline * 256 * 4 + (cycle) * 4;
+        pixels[pixel_index] = 0xFF;
+        pixels[pixel_index + 3] = 0xFF;
+    }
+    else if (scanline == 241 && cycle == 1)
     {
         if (!suppress_nmi)
         {
@@ -153,6 +160,13 @@ void Ppu::tick()
             }
         }
         suppress_nmi = false;
+    }
+    else if (scanline == 261 && cycle == 0)
+    {
+        if (on_frame)
+        {
+            on_frame(pixels);
+        }
     }
     else if (scanline == 261 && cycle == 1)
     {

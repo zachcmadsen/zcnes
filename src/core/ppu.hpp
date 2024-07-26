@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
+#include <span>
 
 #include "bus.hpp"
 #include "cpu.hpp"
@@ -18,6 +20,8 @@ class Ppu
     std::uint8_t read(std::uint16_t addr);
 
     void write(std::uint16_t addr, std::uint8_t data);
+
+    std::function<void(std::span<const std::uint8_t>)> on_frame;
 
   private:
     struct Ctrl
@@ -86,6 +90,8 @@ class Ppu
     std::uint8_t read_buffer{};
 
     Cpu<Bus> *cpu;
+
+    std::array<std::uint8_t, 4 * 256 * 240> pixels;
 
     void tick();
 
