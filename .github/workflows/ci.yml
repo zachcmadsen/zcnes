@@ -33,6 +33,13 @@ jobs:
           unzip ninja-linux.zip -d bin
           echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
 
+      - name: Install Ninja (Windows)
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: |
+          curl -L -o ninja-win.zip https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-win.zip
+          unzip ninja-win.zip -d bin
+          echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
+
       - name: Configure
         run: cmake -S . -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${{matrix.c_compiler}} -DCMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }}
 
