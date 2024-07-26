@@ -8,6 +8,6 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(nes-snd-emu)
 
 add_library(core STATIC)
-target_sources(core PRIVATE src/apu.cpp src/bus.cpp src/cart.cpp src/core.cpp src/ppu.cpp)
-target_include_directories(core PUBLIC src)
+target_sources(core PRIVATE apu.cpp bus.cpp cart.cpp core.cpp ppu.cpp)
+target_include_directories(core PUBLIC .)
 target_link_libraries(core PUBLIC nes-snd-emu::nes-snd-emu)
