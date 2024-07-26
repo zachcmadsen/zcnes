@@ -15,16 +15,16 @@ jobs:
           - c_compiler: "clang-18"
             cxx_compiler: "clang++-18"
             os: ubuntu-24.04
-          - c_compiler: "cl"
-            cxx_compiler: "cl"
+          - c_compiler: "clang"
+            cxx_compiler: "clang++"
             os: windows-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up MSVC environment
-        if: ${{ matrix.os == 'windows-latest' }}
-        uses: ilammy/msvc-dev-cmd@v1
+      # - name: Set up MSVC environment
+      #   if: ${{ matrix.os == 'windows-latest' }}
+      #   uses: ilammy/msvc-dev-cmd@v1
 
       - name: Install Ninja
         if: ${{ matrix.os == 'ubuntu-24.04' }}
