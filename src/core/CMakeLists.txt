@@ -5,6 +5,7 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/zachcmadsen/Nes_Snd_Emu
     GIT_TAG main
 )
+message(STATUS "Fetching Nes_Snd_Emu...")
 FetchContent_MakeAvailable(nes-snd-emu)
 
 add_library(core STATIC)
