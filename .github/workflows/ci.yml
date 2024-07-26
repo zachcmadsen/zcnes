@@ -40,6 +40,9 @@ jobs:
           unzip ninja-win.zip -d bin
           echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
 
+      - name: Print ninja version
+        run: ninja --version
+
       - name: Configure
         run: cmake -S . -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${{matrix.c_compiler}} -DCMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }}
 
