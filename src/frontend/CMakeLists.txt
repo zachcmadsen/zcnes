@@ -2,8 +2,7 @@ include(FetchContent)
 
 FetchContent_Declare(
     rtrb
-    GIT_REPOSITORY  https://github.com/zachcmadsen/rtrb-capi
-    GIT_TAG main
+    URL https://github.com/zachcmadsen/rtrb-capi/releases/download/v0.1.0/rtrb-src.tar.gz
 )
 FetchContent_MakeAvailable(rtrb)
 
@@ -21,20 +20,14 @@ FetchContent_MakeAvailable(SDL2)
 
 add_executable(zcnes)
 target_sources(zcnes PRIVATE main.cpp)
-target_link_libraries(zcnes PRIVATE rtrb::rtrb-shared SDL2::SDL2main SDL2::SDL2 core)
+target_link_libraries(zcnes PRIVATE rtrb::rtrb SDL2::SDL2main SDL2::SDL2 core)
 
-# Copy SDL2.dll to zcnes's output directory.
 if(WIN32)
+    # Copy SDL2.dll to zcnes's output directory.
     add_custom_command(
         TARGET zcnes
         POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:SDL2::SDL2>" "$<TARGET_FILE_DIR:zcnes>"
-        VERBATIM
-    )
-    add_custom_command(
-        TARGET zcnes
-        POST_BUILD
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:rtrb::rtrb-shared>" "$<TARGET_FILE_DIR:zcnes>"
         VERBATIM
     )
 endif()
