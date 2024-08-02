@@ -3,3 +3,6 @@
 
 # clangd cache
 /.cache
+
+# NES roms
+*.nes
