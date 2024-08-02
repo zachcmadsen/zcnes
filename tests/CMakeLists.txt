@@ -11,6 +11,7 @@ add_executable(blargg)
 target_sources(blargg PRIVATE blargg.cpp)
 target_include_directories(blargg PRIVATE .)
 target_link_libraries(blargg PRIVATE core)
+target_compile_features(blargg PRIVATE cxx_std_20)
 
 function(add_blargg_test TEST_NAME)
   file(GLOB TEST_FILES "${zcnes-tests_SOURCE_DIR}/${TEST_NAME}/*.nes")
@@ -45,6 +46,7 @@ if (ZCNES_BUILD_SINGLE_STEP_TESTS)
   target_sources(single-step PRIVATE single_step.cpp)
   target_include_directories(single-step PRIVATE .)
   target_link_libraries(single-step PRIVATE core cista)
+  target_compile_features(single-step PRIVATE cxx_std_20)
 
   # Single step tests are too slow without some optimizations.
   target_compile_options(single-step PRIVATE "$<$<CONFIG:Debug>:-O1>")

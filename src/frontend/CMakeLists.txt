@@ -20,7 +20,16 @@ FetchContent_MakeAvailable(SDL2)
 
 add_executable(zcnes)
 target_sources(zcnes PRIVATE main.cpp)
-target_link_libraries(zcnes PRIVATE rtrb::rtrb SDL2::SDL2main SDL2::SDL2 core)
+target_link_libraries(
+    zcnes PRIVATE
+    rtrb::rtrb
+    SDL2::SDL2main
+    SDL2::SDL2 core
+)
+target_compile_features(zcnes PRIVATE cxx_std_20)
+
+include(${PROJECT_SOURCE_DIR}/cmake/zcnes.cmake)
+zcnes_compile_options(core)
 
 if(WIN32)
     # Copy SDL2.dll to zcnes's output directory.
