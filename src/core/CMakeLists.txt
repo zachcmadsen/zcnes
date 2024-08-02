@@ -2,8 +2,7 @@ include(FetchContent)
 
 FetchContent_Declare(
     nes-snd-emu
-    GIT_REPOSITORY https://github.com/zachcmadsen/Nes_Snd_Emu
-    GIT_TAG main
+    URL https://github.com/zachcmadsen/Nes_Snd_Emu/releases/download/v0.1.0/nes-snd-emu-src.tar.gz
 )
 message(STATUS "Fetching Nes_Snd_Emu...")
 FetchContent_MakeAvailable(nes-snd-emu)
