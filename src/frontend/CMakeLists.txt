@@ -2,7 +2,7 @@ include(FetchContent)
 
 FetchContent_Declare(
     rtrb
-    URL https://github.com/zachcmadsen/rtrb-capi/releases/download/v0.1.0/rtrb-src.tar.gz
+    URL https://github.com/zachcmadsen/rtrb-capi/releases/download/v0.1.1/rtrb-src.tar.gz
 )
 FetchContent_MakeAvailable(rtrb)
 
