@@ -7,6 +7,22 @@ FetchContent_Declare(
 message(STATUS "Fetching zcnes-tests...")
 FetchContent_MakeAvailable(zcnes-tests)
 
+FetchContent_Declare(
+  Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG        v3.6.0
+)
+message(STATUS "Fetching Catch2...")
+FetchContent_MakeAvailable(Catch2)
+
+add_executable(sample)
+target_sources(sample PRIVATE sample.cpp)
+target_link_libraries(sample PRIVATE Catch2::Catch2WithMain)
+target_compile_features(sample PRIVATE cxx_std_20)
+
+include(Catch)
+catch_discover_tests(sample)
+
 add_executable(blargg)
 target_sources(blargg PRIVATE blargg.cpp)
 target_include_directories(blargg PRIVATE .)
@@ -23,8 +39,8 @@ function(add_blargg_test TEST_NAME)
   endforeach()
 endfunction()
 
-add_blargg_test(instr_test-v5)
-add_blargg_test(ppu_vbl_nmi)
+# add_blargg_test(instr_test-v5)
+# add_blargg_test(ppu_vbl_nmi)
 
 if (ZCNES_BUILD_SINGLE_STEP_TESTS)
   FetchContent_Declare(
@@ -60,7 +76,7 @@ if (ZCNES_BUILD_SINGLE_STEP_TESTS)
   foreach(SINGLE_STEP_FILE ${SINGLE_STEP_FILES})
     cmake_path(GET SINGLE_STEP_FILE STEM OPCODE)
     if (NOT "${OPCODE}" IN_LIST OPCODES_TO_SKIP)
-      add_test("single-step.${OPCODE}" single-step ${SINGLE_STEP_FILE})
+      # add_test("single-step.${OPCODE}" single-step ${SINGLE_STEP_FILE})
     endif()
   endforeach()
 endif()

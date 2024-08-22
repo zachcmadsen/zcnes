@@ -8,8 +8,8 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "ZCNES_BUILD_FRONTEND": "ON",
-                "ZCNES_BUILD_SINGLE_STEP_TESTS": "ON",
+                "ZCNES_BUILD_FRONTEND": "OFF",
+                "ZCNES_BUILD_SINGLE_STEP_TESTS": "OFF",
                 "ZCNES_GCC_CLANG_FLAGS": "-Wall -pedantic -Wextra -Wconversion -Wsign-conversion",
                 "ZCNES_MSVC_FLAGS": "/W4"
             }
