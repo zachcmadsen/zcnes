@@ -64,3 +64,17 @@ if (ZCNES_BUILD_SINGLE_STEP_TESTS)
     endif()
   endforeach()
 endif()
+
+include(FetchContent)
+
+# TODO: Download the sources.zip from a release (if there's one)?
+FetchContent_Declare(
+  simdjson
+  GIT_REPOSITORY https://github.com/simdjson/simdjson.git
+  GIT_TAG  tags/v3.6.0
+  GIT_SHALLOW TRUE)
+
+FetchContent_MakeAvailable(simdjson)
+
+add_executable(new-tests new_tests.cpp)
+target_link_libraries(new-tests PRIVATE simdjson)
